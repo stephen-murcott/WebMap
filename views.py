@@ -295,14 +295,17 @@ def index(request, filterservice="", filterportid=""):
 		'	</div>'+\
 		'</div>'
 
-		r['scaninfo'] = '<span class="card-title">Select a Nmap XML file</span><p>Nmap XML files: '+ str(len(xmlfiles)) +'</p>'
 
 		r['trhost'] = ''
 		r['trhead'] = '<tr><th>Filename</th><th>Scan Start Time</th><th>Hosts</th><th>&nbsp;</th></tr>'
 
+		xmlfilescount = 0
 		for i in xmlfiles:
 			if re.search('\.xml$', i) is None:
 				continue
+
+			xmlfilescount = (xmlfilescount + 1)
+
 			oo = xmltodict.parse(open('/opt/xml/'+i, 'r').read())
 			r['out2'] = json.dumps(oo['nmaprun'], indent=4)
 			o = json.loads(r['out2'])
@@ -327,7 +330,8 @@ def index(request, filterservice="", filterportid=""):
 			'	<td><a href="'+viewhref+'" class="btn blue right">view</a></td>'+\
 			'</tr>'
 
-		# r['out'] = os.listdir('/opt/xml')
+		r['scaninfo'] = '<span class="card-title">Select a Nmap XML file</span><p>Nmap XML files: '+ str(xmlfilescount) +'</p>'
+
 		return render(request, 'nmapreport/index.html', r)
 
 	scanmd5 = hashlib.md5(str(request.session['scanfile']).encode('utf-8')).hexdigest()
