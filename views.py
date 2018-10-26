@@ -270,28 +270,33 @@ def index(request, filterservice="", filterportid=""):
 		# no file selected
 		xmlfiles = os.listdir('/opt/xml')
 
-		r['table'] = '<div class="" style="border-top:solid #444 1px;"><br>'+\
+		r['table'] = '<div class="card" style="background-color:#3e3e3e;"><div class="card-content">'+\
 		'		Put your Nmap XML files in <span class="tmlabel grey-text" style="background-color:transparent;">/opt/xml/</span> directory, example:<br><br>'+\
 		'		<div class="tmlabel black grey-text" style="padding:10px;font-size:14px;">nmap -A -T4 -oX myscan.xml 192.168.1.0/24<br>'+\
 		'		mv myscan.xml &lt;docker webmap xml dir&gt;<br><br>'+\
 		'		# or you can copy myscan.xml to the webmap container:<br>'+\
 		'		docker cp myscan.xml webmap:/opt/xml/</div>'+\
-		'</div>'+\
-		'<script async defer src="https://buttons.github.io/buttons.js"></script>'
+		'</div></div>'
 
-		r['table'] += '<div class="row" style="margin-top:60px;">'+\
+		r['table'] += '<div class="row hide-on-med-and-down" style="margin-top:60px;padding:10px;border-top:solid #444 1px;">'+\
 		'	<div class="col s4" style="text-align:center;">'+\
-		'		<img src="/static/logo.png" style="width:300px;" /><br>'+\
-		'		<span style="color:#999;">Made with <i class="fas fa-heart red-text"></i> by Andrea <b><a href="https://twitter.com/Menin_TheMiddle">theMiddle</a></b> Menin</span>'+\
+		'		<img src="/static/logo.png" style="width:320px;" /><br>'+\
+		'		<span style="color:#999;">Made with <i class="fas fa-heart red-text"></i> by Andrea <b><a href="https://twitter.com/Menin_TheMiddle">theMiddle</a></b> Menin</span><br><br>'+\
 		'	</div>'+\
-		'	<div class="col s3" style="color:#999;"><b>GitHub:</b><br><br>'+\
-		'		<a class="github-button" href="https://github.com/theMiddleBlue" data-size="large" data-show-count="true" aria-label="Follow theMiddle on GitHub">Follow theMiddle</a><br>'+\
+		'	<div class="col s4" style="color:#999;text-align:center;">'+\
+		'		<img src="/static/rev3rse_logo.png" style="width:180px;" /><br>'+\
+		'		<span style="color:#999;">A Rev3rse Security Project</span>'+\
+		'		<!-- <a class="github-button" href="https://github.com/theMiddleBlue" data-size="large" data-show-count="true" aria-label="Follow theMiddle on GitHub">Follow theMiddle</a><br>'+\
 		'		<a class="github-button" href="https://github.com/Rev3rseSecurity/WebMap/subscription" data-icon="octicon-eye" data-size="large" data-show-count="true" aria-label="Watch Rev3rseSecurity/WebMap on GitHub">Watch</a><br>'+\
-		'		<a class="github-button" href="https://github.com/Rev3rseSecurity/WebMap/" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star Rev3rseSecurity/WebMap on GitHub">Star</a>'+\
+		'		<a class="github-button" href="https://github.com/Rev3rseSecurity/WebMap/" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star Rev3rseSecurity/WebMap on GitHub">Star</a> -->'+\
 		'	</div>'+\
-		'	<div class="col s5" style="color:#999;"><b>Follow me:</b><br><br>'+\
-		'		<a href="https://twitter.com/Menin_TheMiddle?ref_src=twsrc%5Etfw" class="twitter-follow-button" data-size="large" data-show-count="true">Follow @Menin_TheMiddle</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script><br>'+\
-		'		<script src="https://apis.google.com/js/platform.js"></script><div class="g-ytsubscribe" data-channelid="UCzvJStjySZVvOBsPl-Vgj0g" data-layout="default" data-theme="dark" data-count="default"></div>'+\
+		'	<div class="col s4" style="color:#999;text-align:left;">'+\
+		'		<div style="color:#999;margin-bottom:10px;">Support us &amp; Follow us</div>'+\
+		'		<a href="https://github.com/Rev3rseSecurity/WebMap/" class="white-text"><i class="fab fa-github fa-1x white-text"></i> WebMap on GitHub</a><br>'+\
+		'		<i class="fab fa-twitter fa-1x blue-text" style=""></i> <b>Rev3rse Security</b> on Twitter<br>'+\
+		'		<i class="fab fa-youtube fa-1x red-text" style=""></i> <b>Rev3rse Security</b> on YouTube<br>'+\
+		'		<!-- <a href="https://twitter.com/Menin_TheMiddle?ref_src=twsrc%5Etfw" class="twitter-follow-button" data-size="large" data-show-count="true">Follow @Menin_TheMiddle</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script><br>'+\
+		'		<script src="https://apis.google.com/js/platform.js"></script><div class="g-ytsubscribe" data-channelid="UCzvJStjySZVvOBsPl-Vgj0g" data-layout="default" data-theme="dark" data-count="default"></div> -->'+\
 		'	</div>'+\
 		'</div>'
 
