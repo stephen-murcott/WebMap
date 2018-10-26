@@ -36,6 +36,11 @@ $ nmap -sT -A -T4 -oX /tmp/webmap/myscan.xml 192.168.1.0/24
 ```
 Now point your browser to http://localhost:8000
 
+### Quick and Dirty
+```bash
+$ curl -sL url | bash
+```
+
 ## Video
 -- coming soon...
 
