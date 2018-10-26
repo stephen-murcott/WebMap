@@ -293,8 +293,8 @@ def index(request, filterservice="", filterportid=""):
 		'	<div class="col s4" style="color:#999;text-align:left;">'+\
 		'		<div style="color:#999;margin-bottom:10px;">Support us &amp; Follow us</div>'+\
 		'		<a href="https://github.com/Rev3rseSecurity/WebMap/" class="white-text"><i class="fab fa-github fa-1x white-text"></i> WebMap on GitHub</a><br>'+\
-		'		<i class="fab fa-twitter fa-1x blue-text" style=""></i> <b>Rev3rse Security</b> on Twitter<br>'+\
-		'		<i class="fab fa-youtube fa-1x red-text" style=""></i> <b>Rev3rse Security</b> on YouTube<br>'+\
+		'		<a href="https://twitter.com/rev3rsesecurity" class="white-text"><i class="fab fa-twitter fa-1x blue-text" style=""></i> <b>Rev3rse Security</b> on Twitter</a><br>'+\
+		'		<a href="https://www.youtube.com/rev3rsesecurity" class="white-text"><i class="fab fa-youtube fa-1x red-text" style=""></i> <b>Rev3rse Security</b> on YouTube</a><br>'+\
 		'		<!-- <a href="https://twitter.com/Menin_TheMiddle?ref_src=twsrc%5Etfw" class="twitter-follow-button" data-size="large" data-show-count="true">Follow @Menin_TheMiddle</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script><br>'+\
 		'		<script src="https://apis.google.com/js/platform.js"></script><div class="g-ytsubscribe" data-channelid="UCzvJStjySZVvOBsPl-Vgj0g" data-layout="default" data-theme="dark" data-count="default"></div> -->'+\
 		'	</div>'+\
