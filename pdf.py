@@ -239,7 +239,7 @@ def reportPDFView(request):
 			'	<table><thead><tr><th>Protocol / Port</th><th>Port State</th><th>Product / Version</th></tr></thead><tbody>'+\
 			hostdetails_html_tr+\
 			'</tbody></table></div>'+\
-			'<div class="">'+portdetails_html_tr+'</div>'+\
+			'<div style="page-break-before: always;"><h3>NSE Scripts for '+saddress+':</h3>'+portdetails_html_tr+'</div>'+\
 			notesout+\
 			cveout_html
 
