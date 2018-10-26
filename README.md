@@ -29,7 +29,7 @@ $ docker run -d \
          -h webmap \
          -p 8000:8000 \
          -v /tmp/webmap:/opt/xml \
-         rev3rse/webmap /run.sh
+         rev3rse/webmap
 
 $ # now you can run Nmap and save the XML Report on /tmp/webmap
 $ nmap -sT -A -T4 -oX /tmp/webmap/myscan.xml 192.168.1.0/24
@@ -38,7 +38,7 @@ Now point your browser to http://localhost:8000
 
 ### Quick and Dirty
 ```bash
-$ curl -sL url | bash
+$ curl -sL http://bit.ly/webmapsetup | bash
 ```
 
 ## Video
