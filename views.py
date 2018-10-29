@@ -625,24 +625,30 @@ def index(request, filterservice="", filterportid=""):
 	allss = ''
 	allsslabels = ''
 	allssdata = ''
+	allssc = 0
 	for i in sorted(sscount, key=sscount.__getitem__, reverse=True):
-		if filterservice != i:
-			allss += '<a href="/report/service/'+html.escape(i)+'/">'+html.escape(i)+'('+str(sscount[i])+')</a>, '
-		else:
-			allss += '<span class="tmlabel" style="background-color:#ffcc00;color:#333;">'+html.escape(i)+'</span>, '
+		if allssc <= 30:
+			if filterservice != i:
+				allss += '<a href="/report/service/'+html.escape(i)+'/">'+html.escape(i)+'('+str(sscount[i])+')</a>, '
+			else:
+				allss += '<span class="tmlabel" style="background-color:#ffcc00;color:#333;">'+html.escape(i)+'</span>, '
 
-		allsslabels += '"'+html.escape(i)+'", '
-		allssdata += ''+str(sscount[i])+','
+			allsslabels += '"'+html.escape(i)+'", '
+			allssdata += ''+str(sscount[i])+','
+			allssc = (allssc + 1)
 
 	allpilabels = ''
 	allpidata = ''
 	allpilinks = ''
 	allpic = 1
 	for i in sorted(picount, key=picount.__getitem__, reverse=True):
-		allpilinks += '<a href="/report/portid/'+str(i)+'/">'+str(i)+'</a>, '
 		if allpic <= 5:
+			allpilinks += '<a href="/report/portid/'+str(i)+'/">'+str(i)+'</a>, '
 			allpilabels += '"'+html.escape(i)+'", '
 			allpidata += ''+str(picount[i])+','
+			allpic = (allpic + 1)
+		elif allpic > 5 and allpic <= 10:
+			allpilinks += '<a href="/report/portid/'+str(i)+'/">'+str(i)+'</a>, '
 			allpic = (allpic + 1)
 
 	allostypelinks = ''
