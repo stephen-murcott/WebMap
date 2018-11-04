@@ -3,11 +3,9 @@
 A Web Dashbord for Nmap XML Report 
 </p>
 
-![WebMap](https://i.imgur.com/U9S089v.png)
+![WebMap](https://i.imgur.com/BOZVc8e.png)
 
-![WebMap](https://i.imgur.com/Ptijc67.png)
-
-![WebMap](https://i.imgur.com/alWZix9.png)
+![WebMap](https://i.imgur.com/33kpQ0J.png)
 
 ## Table Of Contents
 - [Usage](#usage)
@@ -41,6 +39,21 @@ Now point your browser to http://localhost:8000
 $ curl -sL http://bit.ly/webmapsetup | bash
 ```
 
+### Upgrade from previous release
+```bash
+$ # stop running webmap container
+$ docker stop webmap
+
+$ # remove webmap container
+$ docker rm webmap
+
+$ # pull new image from dockerhub
+$ docker pull rev3rse/webmap
+
+$ # run WebMap
+$ curl -sL http://bit.ly/webmapsetup | bash
+```
+
 ## Video
 -- coming soon...
 
@@ -68,6 +81,9 @@ PDF title: `ACME Ltd.`
 thanks to the amazing API services by circl.lu, WebMap is able to looking for CVE and Exploits for each CPE collected by Nmap. 
 Not all CPE are checked over the circl.lu API, but only when a specific version is specified 
 (for example: `cpe:/a:microsoft:iis:7.5` and not `cpe:/o:microsoft:windows`).
+
+## Network View
+![WebMap](https://i.imgur.com/j77jQz9.png)
 
 ## Third Parts
 - [Django](https://www.djangoproject.com)
