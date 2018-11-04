@@ -11,6 +11,7 @@ A Web Dashbord for Nmap XML Report
 - [Usage](#usage)
 - [Features](#features)
 - [Changes on v2.1](#changes-on-v21)
+- [PDF Report](#pdf-report)
 - [XML Filenames](#xml-filenames)
 - [CVE and Exploits](#cve-and-exploits)
 - [Network View](#network-view)
@@ -74,6 +75,9 @@ but if you need it you can find all building steps inside the [Dockerfile](https
 - Fixed some Nmap XML parse problems
 - Fixed CVE and Exploit collecting problems
 - Add new Network View
+
+## PDF Report
+![WebMap](https://i.imgur.com/alWZix9.png)
 
 ## XML Filenames
 When creating the PDF version of the Nmap XML Report, the XML filename is used as document title on the first page. 
