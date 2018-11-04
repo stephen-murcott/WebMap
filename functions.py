@@ -46,6 +46,9 @@ def nmap_ports_stats(scanfile):
 
 	po,pc,pf = 0,0,0
 
+	if 'host' not in o:
+		return {'po':0,'pc':0,'pf':0}
+
 	for ik in o['host']:
 		if type(ik) is dict:
 			i = ik
