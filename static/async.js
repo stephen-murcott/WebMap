@@ -5,14 +5,15 @@ $(document).ready(function() {
 var cpetot = 0;
 var cpetimer;
 function checkCVE() {
+	if($('#cpestring').length <= 0) {
+		M.toast({html: 'Please, select a scan report first'});
+		return 0;
+	}
+
 	cpe = JSON.parse(atob(decodeURIComponent($('#cpestring').val())));
 	csrftoken = $('input[name="csrfmiddlewaretoken"]').val();
 	console.log(cpe);
-	/* $.get('http://cve.circl.lu/api/cvefor/cpe:/a:openbsd:openssh:7.6').done(function(d) {
-		console.log(d);
-	}); */
 
-	$('#modal1').css('background-color','#3e3e3e');
 	$('#modaltitle').html('Looking for CVE and Exploits');
 	$('#modalbody').html(
 		'This process could take a while, please wait...'+
@@ -20,6 +21,18 @@ function checkCVE() {
 	);
 	$('#modalfooter').html('');
 	$('#modal1').modal('open');
+
+	$.post('/report/api/getcve/', {
+		'cpe': $('#cpestring').val(),
+		'csrfmiddlewaretoken': csrftoken
+	}).done(function(d) {
+		console.log(d);
+		$('#modalbody').html('Done. Please, reload this page by clicking on Reload button.');
+		$('#modalfooter').html('<button class="btn blue" onclick="javascript:location.reload();">Reload</button>');
+	});
+
+	return 0;
+	
 
 	cpetot = Object.keys(cpe).length;
 	console.log(cpetot);
@@ -74,7 +87,7 @@ function genPDF(md5scan) {
 	if(/^[a-f0-9]{32,32}$/.test(md5scan)) {
 		$.get('/report/api/pdf/').done(function(data) {
 			console.log(data);
-			$('#modal1').css('background-color','#3e3e3e');
+			// $('#modal1').css('background-color','#3e3e3e');
 			$('#modaltitle').html('Generating PDF Report');
 		
 			$('#modalbody').html('Please wait a few seconds...<br>'+
@@ -124,13 +137,13 @@ function openNotes(hashstr, notesb64) {
 		} else {
 			savednotes = ''
 		}
-		$('#modal1').css('background-color','#3e3e3e');
+		// $('#modal1').css('background-color','#3e3e3e');
 		$('#modaltitle').html('Save Notes');
 		$('#modalbody').html(
 			'In the text area below, you can insert notes that will appear on the PDF report. '+
 			'All input here are <b class="blue-text">intentionally not sanitized</b>, so you can use HTML markup and JavaScript. '+
 			'Please, keep in mind that <b class="orange-text">you can break the PDF View HTML</b> and, of course, this represents a stored XSS vector.<br><br>'+
-			'<textarea id="notes" style="color:#fff;min-height:160px;">'+$('<span/>').text(savednotes).html()+'</textarea>'+
+			'<textarea id="notes" style="min-height:160px;border-radius:4px;border:solid #ccc 1px;padding:10px;font-family:monospace;">'+$('<span/>').text(savednotes).html()+'</textarea>'+
 			'<input type="hidden" id="hashstr" value="'+hashstr+'" /><br><br>'+
 			'<b>Tips:</b><br>'+
 			'<code class="grey-text">&lt;b&gt;bold text&lt;/b&gt;</code> = <b>bold text</b><br>'+
@@ -138,7 +151,7 @@ function openNotes(hashstr, notesb64) {
 			'<code class="grey-text">&lt;span class="label green"&gt;A green label&lt;/span&gt;</code> = <span class="label green">A green label</span><br>'+
 			'<code class="grey-text">&lt;code&gt;monospace font&lt;/code&gt;</code> = <code>monospace font</code>'
 		);
-		$('#modalfooter').html('<button onclick="javascript:saveNotes();" class="waves-effect waves-green btn grey white-text">Save</button>');
+		$('#modalfooter').html('<button class="modal-close waves-effect waves-green btn grey">Close</button> <button onclick="javascript:saveNotes();" class="waves-effect waves-green btn green white-text">Save</button>');
 		$('#modal1').modal('open');
 	}
 }
@@ -147,7 +160,7 @@ function apiPortDetails(address, portid) {
 	$.get('/report/api/'+address+'/'+portid+'/').done(function(data) {
 		console.log(data);
 
-		$('#modaltitle').html('Port Details: <span class="blue-text">'+$('<span/>').text(data['@portid']).html()+' / '+$('<span/>').text(data['@protocol']).html()+'</span>');
+		$('#modaltitle').html('Port Details: <span class="blue-text">'+$('<span/>').text(data['@protocol']).html().toUpperCase()+' / '+$('<span/>').text(data['@portid']).html()+'</span>');
 
 		tbody = ''
 		ingorescriptid = {
@@ -170,7 +183,7 @@ function apiPortDetails(address, portid) {
 			tbody += '<tr><td><i>none</i></td><td><i>none</i></td></tr>'
 		}
 
-		$('#modal1').css('background-color','#3e3e3e');
+		// $('#modal1').css('background-color','#3e3e3e');
 
 		$('#modalbody').html('<table class="table"><thead><th style="min-width:200px;">Script ID</th><th>Output</th></thead><tbody>'+tbody+'</tbody></table>');
 		$('#modalbody').append('<br><b>Raw Output:</b><br><pre>'+$('<span/>').text(JSON.stringify(data, null, 4)).html()+'</pre>');
@@ -183,6 +196,7 @@ function removeLabel(type, hashstr, i) {
 		if(data['ok'] == 'label removed') {
 			$('#hostlabel'+i).attr("class","")
 			$('#hostlabel'+i).html("");
+			$('#hostlabelbb'+i).attr("class","")
 		}
 	});
 }
@@ -193,17 +207,34 @@ function setLabel(type, label, hashstr, i) {
 		var res = data;
 		var color = 'grey'; var margin = '10px';
 		if(res['ok'] == 'label set') {
+
 			switch(res['label']) {
 				case 'Vulnerable': color = 'red'; margin = '10px'; break;
 				case 'Critical': color = 'black'; margin = '22px'; break;
 				case 'Warning': color = 'orange'; margin = '28px'; break;
 				case 'Checked': color = 'blue'; margin = '28px'; break;
 			}
-			$('#hostlabel'+i).css("margin-left", margin)
+
+			// z-index:99;transform: rotate(-8deg);margin-top:-14px;margin-left:-40px;
+			$('#hostlabel'+i).css("margin-left", '-40px')
+			$('#hostlabel'+i).css("z-index", '99')
+			$('#hostlabel'+i).css("transform", 'rotate(-8deg)')
+			$('#hostlabel'+i).css("margin-top", '-14px')
 			$('#hostlabel'+i).attr("class","")
-			$('#hostlabel'+i).addClass('rightlabel');
+			$('#hostlabel'+i).addClass('leftlabel');
 			$('#hostlabel'+i).addClass(color);
 			$('#hostlabel'+i).html(res['label']);
+
+			// border-radius:0px 4px 0px 4px;z-index:98;position:absolute;width:18px;height:10px;margin-left:-48px;margin-top:-3px;
+			$('#hostlabelbb'+i).css("border-radius", '0px 4px 0px 4px')
+			$('#hostlabelbb'+i).css("z-index", '98')
+			$('#hostlabelbb'+i).css("position", 'absolute')
+			$('#hostlabelbb'+i).css("width", '18px')
+			$('#hostlabelbb'+i).css("height", '10px')
+			$('#hostlabelbb'+i).css("margin-left", '-48px')
+			$('#hostlabelbb'+i).css("margin-top", '-3px')
+			$('#hostlabelbb'+i).attr("class","")
+			$('#hostlabelbb'+i).addClass(color);
 		}
 	});
 }

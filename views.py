@@ -16,7 +16,7 @@ def setscanfile(request, scanfile):
 		if 'scanfile' in request.session:
 			del(request.session['scanfile'])
 
-	return render(request, 'nmapreport/index.html', { 'out': '', 'table': '', 'scaninfo': '<script> location.href="/"; </script>', 'scandetails': '', 'trhost': '' })
+	return render(request, 'nmapreport/nmap_hostdetails.html', { 'js': '<script> location.href="/"; </script>' })
 
 
 def port(request, port):
@@ -56,20 +56,7 @@ def details(request, address):
 			noteshost[m.group(1)][m.group(2)] = open('/opt/notes/'+nf, 'r').read()
 
 	# collect all cve in cvehost dict
-	cvehost = {}
-	cvefiles = os.listdir('/opt/notes')
-	for cf in cvefiles:
-		m = re.match('^('+scanmd5+')_([a-z0-9]{32,32})\.([0-9]+)\.cve$', cf)
-		if m is not None:
-			if m.group(1) not in cvehost:
-				cvehost[m.group(1)] = {}
-
-			if m.group(2) not in cvehost[m.group(1)]:
-				cvehost[m.group(1)][m.group(2)] = {}
-
-			cvehost[m.group(1)][m.group(2)][m.group(3)] = open('/opt/notes/'+cf, 'r').read()
-
-
+	cvehost = get_cve(scanmd5)
 
 	r['trhead'] = '<tr><th>Port</th><th style="width:300px;">Product / Version</th><th>Extra Info</th><th>&nbsp;</th></tr>'
 	pel=0
@@ -87,14 +74,21 @@ def details(request, address):
 				if ai['@addrtype'] == 'ipv4':
 					saddress = ai['@addr'] 
 
-
 		if str(saddress) == address:
-			#r['out'] = json.dumps(i, indent=4)
-			h = '<span style="color:#999;font-size:12px;"><i>No Hostname</i></span>'
-			if 'hostnames' in i:
-				if type(i['hostnames']) is dict and 'hostname' in i['hostnames']:
-					if '@name' in i['hostnames']['hostname']:
-						h = '<span style="color:#999;font-size:12px;">'+i['hostnames']['hostname']['@name']+'</span>'
+			hostname = ''
+			if 'hostnames' in i and type(i['hostnames']) is dict:
+				# hostname = json.dumps(i['hostnames'])
+				if 'hostname' in i['hostnames']:
+					hostname += '<br>'
+					if type(i['hostnames']['hostname']) is list:
+						for hi in i['hostnames']['hostname']:
+							hostname += '<span class="small grey-text"><b>'+hi['@type']+':</b> '+hi['@name']+'</span><br>'
+					else:
+						hostname += '<span class="small grey-text"><b>'+i['hostnames']['hostname']['@type']+':</b> '+i['hostnames']['hostname']['@name']+'</span><br>'
+
+			r['address'] = html.escape(str(saddress))
+			r['hostname'] = hostname
+			r['scanfile'] = request.session['scanfile']
 
 			labelout = '<span id="hostlabel"></span>'
 			if scanmd5 in labelhost:
@@ -103,14 +97,11 @@ def details(request, address):
 					labelmargin = labelToMargin(labelhost[scanmd5][addressmd5])
 					labelout = '<span id="hostlabel" style="margin-left:60px;margin-top:-24px;" class="rightlabel '+labelcolor+'">'+html.escape(labelhost[scanmd5][addressmd5])+'</span>'
 
-			r['scaninfo'] = '<div class="row">'+\
-			'	<div class="col s3"><span class="card-title">Host Details:</span><h6>'+html.escape(address)+'</h6>'+h+labelout+'</div>'+\
-			'	<div class="col s3" id="detailspo"></div>'+\
-			'	<div class="col s3" id="detailspc"></div>'+\
-			'	<div class="col s3" id="detailspf"></div>'+\
-			'</div>'
+					r['label'] = html.escape(labelhost[scanmd5][addressmd5])
+					r['labelcolor'] = labelcolor
 
 			rmdupl = {}
+			r['tr'] = {}
 			for pobj in i['ports']['port']:
 				if type(pobj) is dict:
 					p = pobj
@@ -168,6 +159,17 @@ def details(request, address):
 						else:
 								cpe = '<span class="grey-text" style="font-family:monospace;font-size:12px;">'+html.escape(p['service']['cpe'])+'</span><br>'
 							
+					r['tr'][p['@portid']] = {
+						'service': p['service']['@name'],
+						'protocol': p['@protocol'],
+						'portid': p['@portid'],
+						'product': z,
+						'version': v,
+						'state': p['state']['@state'],
+						'reason': p['state']['@reason'],
+						'extrainfo': e,
+						'pel': str(pel)
+					}
 
 					r['trhost'] += '<tr><td style="vertical-align:top;">'+\
 					'<span style="color:#999;font-size:12px;">'+p['service']['@name']+'</span><br>'+\
@@ -183,11 +185,27 @@ def details(request, address):
 					'<button onclick="javascript:apiPortDetails(\''+html.escape(address)+'\',\''+html.escape(p['@portid'])+'\');" class="btn blue right"><i class="material-icons">receipt</i></button></td>'+\
 					'</tr>'
 				elif p['state']['@state'] == 'filtered':
+					r['tr'][p['@portid']] = {
+						'service': p['service']['@name'],
+						'protocol': p['@protocol'],
+						'portid': p['@portid'],
+						'state': p['state']['@state'],
+						'reason': p['state']['@reason'],
+						'pel': str(pel)
+					}
 					r['trhost'] += '<tr><td><span class="new badge grey" data-badge-caption="">'+p['@protocol']+' / '+p['@portid']+'</span><br>'+\
 					'<span style="color:#999;font-size:12px;">'+p['service']['@name']+'</span></td>'+\
 					'<td colspan="2" style="color:#999;font-size:12px;">State: filtered<br>Reason: '+p['state']['@reason']+'</td>'+\
 					'<td><button onclick="javascript:apiPortDetails(\''+html.escape(address)+'\',\''+html.escape(p['@portid'])+'\');" class="btn blue right"><i class="material-icons">receipt</i></button></td></tr>'
 				else:
+					r['tr'][p['@portid']] = {
+						'service': p['service']['@name'],
+						'protocol': p['@protocol'],
+						'portid': p['@portid'],
+						'state': p['state']['@state'],
+						'reason': p['state']['@reason'],
+						'pel': str(pel)
+					}
 					r['trhost'] += '<tr><td><span class="new badge grey" data-badge-caption="">'+p['@protocol']+' / '+p['@portid']+'</span><br>'+\
 					'<span style="color:#999;font-size:12px;">'+p['service']['@name']+'</span></td>'+\
 					'<td colspan="2" style="color:#999;font-size:12px;">State: '+p['state']['@state']+'<br>Reason: '+p['state']['@reason']+'</td>'+\
@@ -207,43 +225,37 @@ def details(request, address):
 			'		'+base64.b64decode(urllib.parse.unquote(notesb64)).decode('ascii')+\
 			'	</div>'+\
 			'</div>'
-
-			#notesout = '<br><a id="noteshost'+str(hostindex)+'" href="#!" onclick="javascript:openNotes(\''+hashlib.md5(str(address).encode('utf-8')).hexdigest()+'\', \''+notesb64+'\');" class="small"><i class="fas fa-comment"></i> contains notes</a>'
-			#removenotes = '<li><a href="#!" onclick="javascript:removeNotes(\''+addressmd5+'\', \''+str(hostindex)+'\');">Remove notes</a></li>'
+			r['notes'] = base64.b64decode(urllib.parse.unquote(notesb64)).decode('ascii')
 
 	cveout = ''
 	if scanmd5 in cvehost:
 		if addressmd5 in cvehost[scanmd5]:
-			for cveport in cvehost[scanmd5][addressmd5]:
-				cvejson = json.loads(cvehost[scanmd5][addressmd5][cveport])
-				# r['out'] = json.dumps(cvejson, indent=4)
-				for cveobj in cvejson:
+			#for cveport in cvehost[scanmd5][addressmd5]:
+			cvejson = json.loads(cvehost[scanmd5][addressmd5])
+			# r['out'] = json.dumps(cvejson, indent=4)
+			for cveobj in cvejson:
 
-					cverefout = ''
-					for cveref in cveobj['references']:
-						cverefout += '<a href="'+cveref+'">'+cveref+'</a><br>'
+				cverefout = ''
+				for cveref in cveobj['references']:
+					cverefout += '<a href="'+cveref+'">'+cveref+'</a><br>'
 
-					cveexdbout = ''
-					if 'exploit-db' in cveobj:
-						cveexdbout = '<br><div class="small" style="line-height:20px;"><b>Exploit DB:</b><br>'
-						for cveexdb in cveobj['exploit-db']:
-							if 'title' in cveexdb:
-								cveexdbout += '<a href="'+cveexdb['source']+'">'+html.escape(cveexdb['title'])+'</a><br>'
-						cveexdbout += '</div>'
+				cveexdbout = ''
+				if 'exploit-db' in cveobj:
+					cveexdbout = '<br><div class="small" style="line-height:20px;"><b>Exploit DB:</b><br>'
+					for cveexdb in cveobj['exploit-db']:
+						if 'title' in cveexdb:
+							cveexdbout += '<a href="'+cveexdb['source']+'">'+html.escape(cveexdb['title'])+'</a><br>'
+					cveexdbout += '</div>'
 
-					cveout += '<div style="line-height:28px;padding:10px;border:solid #333 1px;border-radius:4px;margin-top:10px;">'+\
-					'	<span class="label red">'+html.escape(cveobj['id'])+'</span> '+html.escape(cveobj['summary'])+'<br><br>'+\
-					'	<div class="small" style="line-height:20px;"><b>References:</b><br>'+cverefout+'</div>'+\
-					cveexdbout+\
-					'</div>'
+				cveout += '<div style="line-height:28px;padding:10px;border-bottom:solid #ccc 1px;margin-top:10px;">'+\
+				'	<span class="label red">'+html.escape(cveobj['id'])+'</span> '+html.escape(cveobj['summary'])+'<br><br>'+\
+				'	<div class="small" style="line-height:20px;"><b>References:</b><br>'+cverefout+'</div>'+\
+				cveexdbout+\
+				'</div>'
 
-			r['table'] += '<div class="card" style="background-color:#3e3e3e;">'+\
-			'	<div class="card-content"><span class="card-title">CVE LIST:</span>'+\
-			cveout+\
-			'	</div>'+\
-			'</div>'
+			r['cvelist'] = cveout
 
-	r['pretable'] = '<script> '+\
+	r['js'] = '<script> '+\
 	'$(document).ready(function() { '+\
 	'	$("#scantitle").html("'+html.escape(request.session['scanfile'])+'");'+\
 	'	var clipboard = new ClipboardJS(".btncpy"); '+\
@@ -257,10 +269,13 @@ def details(request, address):
 	'}); '+\
 	'</script>'
 
-	return render(request, 'nmapreport/index.html', r)
+	return render(request, 'nmapreport/nmap_portdetails.html', r)
 
 def index(request, filterservice="", filterportid=""):
 	r = {}
+
+	gitcmd = os.popen('cd /opt/nmapdashboard/nmapreport && git rev-parse --abbrev-ref HEAD')
+	r['webmapver'] = 'WebMap '+gitcmd.read()+'<br>This project is currently a beta, please <b>DO NOT</b> expose WebMap to internet.<br>This version is <b>NOT</b> production ready.'
 
 	if 'scanfile' in request.session:
 		oo = xmltodict.parse(open('/opt/xml/'+request.session['scanfile'], 'r').read())
@@ -270,39 +285,8 @@ def index(request, filterservice="", filterportid=""):
 		# no file selected
 		xmlfiles = os.listdir('/opt/xml')
 
-		r['table'] = '<div class="card" style="background-color:#3e3e3e;"><div class="card-content">'+\
-		'		Put your Nmap XML files in <span class="tmlabel grey-text" style="background-color:transparent;">/opt/xml/</span> directory, example:<br><br>'+\
-		'		<div class="tmlabel black grey-text" style="padding:10px;font-size:14px;">nmap -A -T4 -oX myscan.xml 192.168.1.0/24<br>'+\
-		'		mv myscan.xml &lt;docker webmap xml dir&gt;<br><br>'+\
-		'		# or you can copy myscan.xml to the webmap container:<br>'+\
-		'		docker cp myscan.xml webmap:/opt/xml/</div>'+\
-		'</div></div>'
-
-		r['table'] += '<div class="row hide-on-med-and-down" style="margin-top:60px;padding:10px;border-top:solid #444 1px;">'+\
-		'	<div class="col s4" style="text-align:center;">'+\
-		'		<img src="/static/logo.png" style="width:320px;" /><br>'+\
-		'		<span style="color:#999;">Made with <i class="fas fa-heart red-text"></i> by Andrea <b><a href="https://twitter.com/Menin_TheMiddle">theMiddle</a></b> Menin</span><br><br>'+\
-		'	</div>'+\
-		'	<div class="col s4" style="color:#999;text-align:center;">'+\
-		'		<img src="/static/rev3rse_logo.png" style="width:180px;" /><br>'+\
-		'		<span style="color:#999;">A Rev3rse Security Project</span>'+\
-		'		<!-- <a class="github-button" href="https://github.com/theMiddleBlue" data-size="large" data-show-count="true" aria-label="Follow theMiddle on GitHub">Follow theMiddle</a><br>'+\
-		'		<a class="github-button" href="https://github.com/Rev3rseSecurity/WebMap/subscription" data-icon="octicon-eye" data-size="large" data-show-count="true" aria-label="Watch Rev3rseSecurity/WebMap on GitHub">Watch</a><br>'+\
-		'		<a class="github-button" href="https://github.com/Rev3rseSecurity/WebMap/" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star Rev3rseSecurity/WebMap on GitHub">Star</a> -->'+\
-		'	</div>'+\
-		'	<div class="col s4" style="color:#999;text-align:left;">'+\
-		'		<div style="color:#999;margin-bottom:10px;">Support us &amp; Follow us</div>'+\
-		'		<a href="https://github.com/Rev3rseSecurity/WebMap/" class="white-text"><i class="fab fa-github fa-1x white-text"></i> WebMap on GitHub</a><br>'+\
-		'		<a href="https://twitter.com/rev3rsesecurity" class="white-text"><i class="fab fa-twitter fa-1x blue-text" style=""></i> <b>Rev3rse Security</b> on Twitter</a><br>'+\
-		'		<a href="https://www.youtube.com/rev3rsesecurity" class="white-text"><i class="fab fa-youtube fa-1x red-text" style=""></i> <b>Rev3rse Security</b> on YouTube</a><br>'+\
-		'		<!-- <a href="https://twitter.com/Menin_TheMiddle?ref_src=twsrc%5Etfw" class="twitter-follow-button" data-size="large" data-show-count="true">Follow @Menin_TheMiddle</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script><br>'+\
-		'		<script src="https://apis.google.com/js/platform.js"></script><div class="g-ytsubscribe" data-channelid="UCzvJStjySZVvOBsPl-Vgj0g" data-layout="default" data-theme="dark" data-count="default"></div> -->'+\
-		'	</div>'+\
-		'</div>'
-
-
-		r['trhost'] = ''
-		r['trhead'] = '<tr><th>Filename</th><th>Scan Start Time</th><th>Hosts</th><th>&nbsp;</th></tr>'
+		r['tr'] = {}
+		r['stats'] = { 'po':0, 'pc':0, 'pf':0}
 
 		xmlfilescount = 0
 		for i in xmlfiles:
@@ -311,7 +295,12 @@ def index(request, filterservice="", filterportid=""):
 
 			xmlfilescount = (xmlfilescount + 1)
 
-			oo = xmltodict.parse(open('/opt/xml/'+i, 'r').read())
+			try:
+				oo = xmltodict.parse(open('/opt/xml/'+i, 'r').read())
+			except:
+				r['tr'][i] = {'filename':html.escape(i), 'startstr': 'Incomplete / Invalid', 'hostnum':0, 'href':'#!', 'portstats':{'po':0,'pc':0,'pf':0}}
+				continue
+
 			r['out2'] = json.dumps(oo['nmaprun'], indent=4)
 			o = json.loads(r['out2'])
 
@@ -328,29 +317,23 @@ def index(request, filterservice="", filterportid=""):
 			else:
 				viewhref = '/" disabled="disabled'
 
-			r['trhost'] += '<tr>'+\
-			'	<td style="font-family:monospace">'+html.escape(i)+'</td>'+\
-			'	<td>'+html.escape(o['@startstr'])+'</td>'+\
-			'	<td>'+hostnum+'</td>'+\
-			'	<td><a href="'+viewhref+'" class="btn blue right">view</a></td>'+\
-			'</tr>'
+			portstats = nmap_ports_stats(i)
 
-		r['scaninfo'] = '<span class="card-title">Select a Nmap XML file</span><p>Nmap XML files: '+ str(xmlfilescount) +'</p>'
+			r['stats']['po'] = (r['stats']['po'] + portstats['po'])
+			r['stats']['pc'] = (r['stats']['pc'] + portstats['pc'])
+			r['stats']['pf'] = (r['stats']['pf'] + portstats['pf'])
 
-		return render(request, 'nmapreport/index.html', r)
+			r['tr'][i] = {'filename':html.escape(i), 'startstr': html.escape(o['@startstr']), 'hostnum':hostnum, 'href':viewhref, 'portstats':portstats}
+
+
+		r['stats']['xmlcount'] = xmlfilescount
+
+		return render(request, 'nmapreport/nmap_xmlfiles.html', r)
+
 
 	scanmd5 = hashlib.md5(str(request.session['scanfile']).encode('utf-8')).hexdigest()
-
-	r['topcontainer'] = '<div class="fixed-action-btn">'+\
-	'	<a class="btn-floating btn-large red">'+\
-	'		<i class="large material-icons">mode_edit</i>'+\
-	'	</a>'+\
-	'	<ul>'+\
-	'		<li><a class="btn-floating red tooltipped" data-position="left" data-tooltip="PDF Report" onclick="javascript:genPDF(\''+scanmd5+'\');"><i class="material-icons">insert_chart</i></a></li>'+\
-	'		<li><a class="btn-floating blue darken-1 tooltipped" data-position="left" data-tooltip="Hide/Show hosts with no open ports" onclick="javascript:$(\'.zeroportopen\').fadeToggle();"><i class="material-icons">view_day</i></a></li>'+\
-	'		<li><a class="btn-floating orange tooltipped" data-position="left" data-tooltip="Check for CVE and Exploits on all hosts" onclick="javascript:checkCVE();"><i class="fas fa-bolt"></i></a></li>'+\
-	'	</ul>'+\
-	'</div>'
+	r['scanfile'] = html.escape(str(request.session['scanfile']))
+	r['scanmd5'] = scanmd5
 
 	# collect all labels in labelhost dict
 	labelhost = {}
@@ -373,18 +356,7 @@ def index(request, filterservice="", filterportid=""):
 			noteshost[m.group(1)][m.group(2)] = open('/opt/notes/'+nf, 'r').read()
 
 	# collect all cve in cvehost dict
-	cvehost = {}
-	cvefiles = os.listdir('/opt/notes')
-	for cf in cvefiles:
-		m = re.match('^('+scanmd5+')_([a-z0-9]{32,32})\.([0-9]+)\.cve$', cf)
-		if m is not None:
-			if m.group(1) not in cvehost:
-				cvehost[m.group(1)] = {}
-
-			if m.group(2) not in cvehost[m.group(1)]:
-				cvehost[m.group(1)][m.group(2)] = {}
-
-			cvehost[m.group(1)][m.group(2)][m.group(3)] = open('/opt/notes/'+cf, 'r').read()
+	cvehost = get_cve(scanmd5)
 
 	tableout = ''
 	hostsup = 0
@@ -392,8 +364,8 @@ def index(request, filterservice="", filterportid=""):
 	ports = { 'open': 0, 'closed': 0, 'filtered': 0 }
 	allostypelist, sscount, picount, cpe = {}, {}, {}, {}
 
-	r['trhost'] = ''
-	r['trhead'] = '<tr><th width="260">Host</th><th>Port State</th><th width="160" style="text-align:center;">Tot Ports</th><th width="200">Services</th><th width="200">Ports</th><th>&nbsp;</th></tr>'
+	r['tr'] = {}
+	r['stats'] = {}
 
 	for ik in o['host']:
 
@@ -404,9 +376,15 @@ def index(request, filterservice="", filterportid=""):
 			i = o['host']
 
 		hostname = ''
-
 		if 'hostnames' in i and type(i['hostnames']) is dict:
-			hostname += '<br><span style="color:#999;font-size:10px;">'+str(i['hostnames']['hostname']['@name'])+'</span>'
+			# hostname = json.dumps(i['hostnames'])
+			if 'hostname' in i['hostnames']:
+				hostname += '<br>'
+				if type(i['hostnames']['hostname']) is list:
+					for hi in i['hostnames']['hostname']:
+						hostname += '<span class="small grey-text"><b>'+hi['@type']+':</b> '+hi['@name']+'</span><br>'
+				else:
+					hostname += '<span class="small grey-text"><b>'+i['hostnames']['hostname']['@type']+':</b> '+i['hostnames']['hostname']['@name']+'</span><br>'
 
 		if i['status']['@state'] == 'up':
 			hostsup = (hostsup + 1)
@@ -423,6 +401,7 @@ def index(request, filterservice="", filterportid=""):
 					address = ai['@addr'] 
 
 		addressmd5 = hashlib.md5(str(address).encode('utf-8')).hexdigest()
+		cpe[address] = {}
 
 		striggered = False
 		if 'ports' in i and 'port' in i['ports']:
@@ -447,19 +426,13 @@ def index(request, filterservice="", filterportid=""):
 				pp[p['@portid']] = p['@portid']
 
 				# cpehtml = ''
-				cpe[address] = {}
 				if 'cpe' in p['service']:
 					if type(p['service']['cpe']) is list:
 						for cpei in p['service']['cpe']:
-							if p['@portid'] not in cpe[address]:
-								cpe[address][p['@portid']] = {}
-
-							cpe[address][p['@portid']][cpei] = cpei
+							cpe[address][cpei] = cpei
 					else:
-						if p['@portid'] not in cpe[address]:
-							cpe[address][p['@portid']] = {}
-
-						cpe[address][p['@portid']][p['service']['cpe']] = p['service']['cpe']
+						cpe[address][p['service']['cpe']] = p['service']['cpe']
+		
 
 				if '@ostype' in p['service']:
 					if p['service']['@ostype'] in allostypelist:
@@ -512,11 +485,14 @@ def index(request, filterservice="", filterportid=""):
 				poclass = 'zeroportopen'
 
 			labelout = '<span id="hostlabel'+str(hostindex)+'"></span>'
+			newlabelout = '<div id="hostlabel'+str(hostindex)+'"></div><div id="hostlabelbb'+str(hostindex)+'"></div>'
 			if scanmd5 in labelhost:
 				if addressmd5 in labelhost[scanmd5]:
 					labelcolor = labelToColor(labelhost[scanmd5][addressmd5])
 					labelmargin = labelToMargin(labelhost[scanmd5][addressmd5])
 					labelout = '<span id="hostlabel'+str(hostindex)+'" style="margin-left:'+labelmargin+'" class="rightlabel '+labelcolor+'">'+html.escape(labelhost[scanmd5][addressmd5])+'</span>'
+					newlabelout = '<div id="hostlabel'+str(hostindex)+'" style="z-index:99;transform: rotate(-8deg);margin-top:-14px;margin-left:-40px;" class="leftlabel '+labelcolor+'">'+html.escape(labelhost[scanmd5][addressmd5])+'</div>'+\
+										'<div id="hostlabelbb'+str(hostindex)+'" class="'+labelcolor+'" style="border-radius:0px 4px 0px 4px;z-index:98;position:absolute;width:18px;height:10px;margin-left:-48px;margin-top:-3px;"></div>'
 
 			notesout,notesb64,removenotes = '','',''
 			if scanmd5 in noteshost:
@@ -529,50 +505,44 @@ def index(request, filterservice="", filterportid=""):
 			cvecount = 0
 			if scanmd5 in cvehost:
 				if addressmd5 in cvehost[scanmd5]:
-					for cveport in cvehost[scanmd5][addressmd5]:
-						cvejson = json.loads(cvehost[scanmd5][addressmd5][cveport])
-						for cveobj in cvejson:
-							cvecount = (cvecount + 1)
+					cvejson = json.loads(cvehost[scanmd5][addressmd5])
+					for cveobj in cvejson:
+						cvecount = (cvecount + 1)
 
 					cveout = '<br><span class="small grey-text"><i class="fas fa-exclamation-triangle orange-text"></i> '+str(cvecount)+' CVE found</span>'
-					# removenotes = '<li><a href="#!" onclick="javascript:removeNotes(\''+addressmd5+'\', \''+str(hostindex)+'\');">Remove notes</a></li>'
 
 			if (filterservice != "" and striggered is True) or (filterportid != "" and striggered is True) or (filterservice == "" and filterportid == ""):
-				portstateout = '<td style="font-size:10px;color:#999;width:300px;"><div style="overflow:none;background-color:#666;" class="tooltipped" data-position="top" data-tooltip="'+str(po)+' open, '+str(pc)+' closed, '+str(pf)+' filtered">'+\
-				'		<div class="perco" data-po="'+str(po)+'" style="padding-left:16px;padding-right:20px;">'+str(po)+'</div>'+\
+				portstateout = '<td style="font-size:10px;color:#999;width:300px;"><div style="overflow:none;background-color:#eee;" class="tooltipped" data-position="top" data-tooltip="'+str(po)+' open, '+str(pc)+' closed, '+str(pf)+' filtered">'+\
+				'		<div class="perco" data-po="'+str(po)+'" style="padding-left:16px;padding-right:20px;"><b>'+str(po)+'</b></div>'+\
 				' </div></td>'
 
 				if (filterservice != "" and striggered is True):
-					portstateout = '<td style="font-size:10px;color:#999;width:300px;"><div style="overflow:none;background-color:#666;" class="tooltipped" data-position="top" data-tooltip="'+str(po)+' open, '+str(pc)+' closed, '+str(pf)+' filtered">'+\
-					'		<div class="perco" data-po="'+str(po)+'" data-pt="'+str((po + pf + pc))+'" style="padding-left:16px;padding-right:20px;">'+str(po)+'</div>'+\
+					portstateout = '<td style="font-size:10px;color:#999;width:300px;"><div style="overflow:none;background-color:#eee;" class="tooltipped" data-position="top" data-tooltip="'+str(po)+' open, '+str(pc)+' closed, '+str(pf)+' filtered">'+\
+					'		<div class="perco" data-po="'+str(po)+'" data-pt="'+str((po + pf + pc))+'" style="padding-left:16px;padding-right:20px;"><b>'+str(po)+'</b></div>'+\
 					'	</div></td>'
 
-				r['trhost'] += '<tr class="'+poclass+'">'+\
-				'	<td><span class="leftlabel" style="background-color:#4a4a4a;color:#999;">'+str(hostindex)+'</span>'+\
-				'		'+ostype+'<br>'+\
-				'		<b><a href="/report/'+str(address)+'">'+str(address)+'</a></b>'+hostname+''+\
-				notesout+\
-				cveout+\
-				'	</td>'+\
-				portstateout+\
-				'	<td style="font-family:monospace;text-align:center;">'+str((po + pf + pc))+'</td>'+\
-				'	<td style="font-size:12px;">'+str(services[0:-2])+'</td>'+\
-				'	<td style="font-size:12px;">'+str(tdports[0:-2])+'</td>'+\
-				'	<td>'+\
-				'		<ul id="hostdd'+str(hostindex)+'" class="dropdown-content" style="min-width:200px;">'+\
-				'			<li><a href="#!" onclick="javascript:setLabel(\'host\', \'Vulnerable\', \''+hashlib.md5(str(address).encode('utf-8')).hexdigest()+'\', '+str(hostindex)+');"><span class="tmlabel red">Vulnerable</span></a></li>'+\
-				'			<li><a href="#!" onclick="javascript:setLabel(\'host\', \'Critical\', \''+hashlib.md5(str(address).encode('utf-8')).hexdigest()+'\', '+str(hostindex)+');"><span class="tmlabel black">Critical</span></a></li>'+\
-				'			<li><a href="#!" onclick="javascript:setLabel(\'host\', \'Warning\', \''+hashlib.md5(str(address).encode('utf-8')).hexdigest()+'\', '+str(hostindex)+');"><span class="tmlabel orange"><span class="tmlabel orange">Warning</span></a></li>'+\
-				'			<li><a href="#!" onclick="javascript:setLabel(\'host\', \'Checked\', \''+hashlib.md5(str(address).encode('utf-8')).hexdigest()+'\', '+str(hostindex)+');"><span class="tmlabel blue"><span class="tmlabel blue">Checked</span></a></li>'+\
-				'			<li><a href="#!" onclick="javascript:removeLabel(\'host\', \''+addressmd5+'\', '+str(hostindex)+');">Remove label</a></li>'+\
-				'			<li class="divider"></li>'+\
-				'			<li><a href="#!" onclick="javascript:openNotes(\''+hashlib.md5(str(address).encode('utf-8')).hexdigest()+'\', \''+notesb64+'\');">Insert notes</a></li>'+\
-				'			'+removenotes+\
-				'		</ul>'+\
-				labelout+\
-				'		<button class="btn darken-2 grey right dropdown-trigger" data-target="hostdd'+str(hostindex)+'"><i class="material-icons">arrow_drop_down</i></button>'+\
-				'	</td>'+\
-				'</tr>'
+				r['tr'][address] = {
+					'hostindex': str(hostindex),
+					'hostname': hostname,
+					'ostype': ostype,
+					'notes': notesout,
+					'cve': cveout,
+					'portstate': portstateout,
+					'po': po,
+					'pc': pc,
+					'pf': pf,
+					'totports': str((po + pf + pc)),
+					'services': str(services[0:-2]),
+					'ports': str(tdports[0:-2]),
+					'addressmd5': addressmd5,
+					'removenotes': removenotes,
+					'labelout': labelout,
+					'newlabelout': newlabelout,
+					'notesb64': notesb64,
+					'notesout': notesout,
+					'cveout': cveout
+				}
+
 				hostindex = (hostindex + 1)
 
 				# this fix single host report
@@ -584,43 +554,28 @@ def index(request, filterservice="", filterportid=""):
 		scaninfobox2 = '<canvas id="chart1"></canvas>'
 		scaninfobox3 = '<canvas id="chart3" height="150"></canvas>'
 	else:
-		scaninfobox2 = ''+\
-		'	Filter port / service: <b>'+html.escape(filterportid+filterservice)+'</b> <a href="/"><i class="fas fa-trash-alt"></i></a><br>'+\
-		'	Total Ports: '+str(totports)+'<br>'+\
-		'	Open Ports: '+str(ports['open'])+'<br>'+\
-		'	Closed Ports: '+str(ports['closed'])+'<br>'+\
-		'	Filtered Ports: '+str(ports['filtered'])+'<br>'
+		scaninfobox2 = '<div class="small">'+\
+		'	<b class="orange-text">Filter port / service:</b> <b>'+html.escape(filterportid+filterservice)+'</b> <a href="/"><i class="fas fa-trash-alt"></i></a><br>'+\
+		'	<b class="orange-text">Total Ports:</b> '+str(totports)+'<br>'+\
+		'	<b class="orange-text">Open Ports:</b> '+str(ports['open'])+'<br>'+\
+		'	<b class="orange-text">Closed Ports:</b> '+str(ports['closed'])+'<br>'+\
+		'	<b class="orange-text">Filtered Ports:</b> '+str(ports['filtered'])+'</div>'
 		scaninfobox3 = '<div id="detailstopports"></div>'
 
-	r['scaninfo'] = ''+\
-	'<div class="row">'+\
-	'	<div class="col s4">Scan Information</div>'+\
-	'	<div class="col s4">Ports Status</div>'+\
-	'	<div class="col s4">Top Ports / Services</div>'+\
-	'</div>'+\
-	'<div class="row">'+\
-	'	<div class="col s4">'+\
-	'		<b class="orange-text">Start:</b> '+o['@startstr']+'<br>'+\
-	'		<b class="orange-text">Scan Type:</b> '+o['scaninfo']['@type']+'<br>'+\
-	'		<b class="orange-text">Scan Protocol:</b> '+o['scaninfo']['@protocol']+'<br>'+\
-	'		<b class="orange-text">Nmap Command:</b> <a class="activator" href="#!">view details</a>'+\
-	'	</div>'+\
-	'	<div class="col s4" style="border-left:solid #999 1px;">'+\
-	scaninfobox2+\
-	'	</div>'+\
-	'	<div class="col s4" style="border-left:solid #999 1px;">'+\
-	scaninfobox3+\
-	'	</div>'+\
-	'</div>'
-
-	r['scandetails'] = '<div class="code" style="word-wrap: break-word;overflow-wrap: break-word;">'+\
-	'	<p>'+o['@args']+'</p>'+\
-	'	<p>'+\
-	'		version: '+o['@version']+'<br>'+\
-	'		xmloutputversion: '+o['@xmloutputversion']+'<br>'+\
-	'	</p>'+\
-	'</div>'
-		
+	r['stats'] = {
+		'scaninfobox2': scaninfobox2,
+		'scaninfobox3': scaninfobox3,
+		'startstr': o['@startstr'],
+		'scantype': o['scaninfo']['@type'],
+		'protocol': o['scaninfo']['@protocol'],
+		'nmapver': o['@version'],
+		'nmapargs': o['@args'],
+		'xmlver': o['@xmloutputversion'],
+		'hostsup': str(hostsup),
+		'popen': ports['open'],
+		'pclosed': ports['closed'],
+		'pfiltered': ports['filtered']
+	}
 
 	allss = ''
 	allsslabels = ''
@@ -656,48 +611,35 @@ def index(request, filterservice="", filterportid=""):
 		allostypelinks += '<a href="">'+str(i)+'</a>, '
 
 
-	r['pretable'] = ''
-	if filterservice == "" and filterportid == "":
-		r['pretable'] += '<div class="row">'+\
-		'	<div class="col s3" style="padding:1px;"><div class="card" style="text-align:center;padding:6px;background-color:#3e3e3e;"><h4><i class="fab fa-creative-commons-sampling"></i> <span class="blue-text">'+str(hostsup)+'</span></h4><span class="small grey-text">HOSTS UP</span></div></div>'+\
-		'	<div class="col s3" style="padding:1px;"><div class="card" style="text-align:center;padding:6px;background-color:#3e3e3e;"><h4><i class="fas fa-door-open"></i> <span class="green-text">'+str(ports['open'])+'</span></h4><span class="small grey-text">OPEN PORTS</span></div></div>'+\
-		'	<div class="col s3" style="padding:1px;"><div class="card" style="text-align:center;padding:6px;background-color:#3e3e3e;"><h4><i class="fas fa-door-closed"></i> <span class="red-text">'+str(ports['closed'])+'</span></h4><span class="small grey-text">CLOSED PORTS</span></div></div>'+\
-		'	<div class="col s3" style="padding:1px;"><div class="card" style="text-align:center;padding:6px;background-color:#3e3e3e;"><h4><i class="fas fa-filter"></i> <span class="orange-text">'+str(ports['filtered'])+'</span></h4><span class="small grey-text">FILTERED PORTS</span></div></div>'+\
-		'</div>'+\
-		'<div class="card" style="background-color:#3e3e3e;">'+\
-		'	<div class="card-content">'+\
-		'		<div class="row">'+\
-		'			<div class="col s4"><b>Services:</b></div><div class="col s8"><b>Services:</b></div>'+\
-		'			<div class="col s4" style="border-right:solid #999 1px;margin-top:10px;min-height:410px;">'+\
-		'				<span style="font-family:monospace;font-size:12px;">'+allss[0:-2]+'</span><br><br>'+\
-		'				<b>Top 10 Ports:</b><br><span style="font-family:monospace;font-size:12px;">'+allpilinks[0:-2]+'</span><br><br>'+\
-		'				<b>OS Type List:</b><br><span style="font-family:monospace;font-size:12px;">'+allostypelinks[0:-2]+'</span>'+\
-		'			</div>'+\
-		'			<div class="col s8" style="margin-top:10px;"><canvas id="chart2" height="200"></canvas></div>'+\
-		'		</div>'+\
-		'	</div>'+\
-		'</div>'
+	r['stats']['services'] = allss[0:-2]
+	r['stats']['portids'] = allpilinks[0:-2]
+	r['stats']['ostypes'] = allostypelinks[0:-2]
 
-		r['pretable'] += '<script>'+\
+	r['pretable'] = ''
+	r['js'] = ''
+	if filterservice == "" and filterportid == "":
+		r['js'] += '<script>'+\
 		'	$(document).ready(function() {'+\
 		'		var ctx = document.getElementById("chart1").getContext("2d");'+\
 		'		var myChart = new Chart(ctx, {'+\
-		'			type: "doughnut", data: {labels:["Open", "Filtered", "Closed"], datasets: [{ data: ['+str(ports['open'])+','+str(ports['filtered'])+','+str(ports['closed'])+'], backgroundColor:["rgba(0,200,0,0.8)","rgba(255,200,0,0.8)","rgba(255,0,0,0.8)"], borderColor:"#3e3e3e" }]}, options: {legend: { position: "right", labels: { fontColor: "#cccccc" }  }}'+\
+		'			type: "doughnut", data: {labels:["Open", "Filtered", "Closed"], datasets: [{ data: ['+str(ports['open'])+','+str(ports['filtered'])+','+str(ports['closed'])+'], backgroundColor:["rgba(0,150,0,0.8)","rgba(255,200,0,0.8)","rgba(255,0,0,0.8)"], borderColor:"#fff" }]}, options: {legend: { position: "right", labels: { fontColor: "#666" }  }}'+\
 		'		});'+\
 		'		var ctx = document.getElementById("chart3").getContext("2d");'+\
 		'		var myChart = new Chart(ctx, {'+\
-		'			type: "doughnut", data: {labels:['+allpilabels[0:-2]+'], datasets: [{ data: ['+allpidata[0:-1]+'], borderColor: "#3e3e3e",  backgroundColor:["#e6194b", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4", "#46f0f0", "#f032e6", "#bcf60c", "#fabebe", "#008080", "#e6beff", "#9a6324", "#fffac8", "#800000", "#aaffc3", "#808000", "#ffd8b1", "#000075", "#808080", "#ffffff", "#000000"] }]}, options: {legend: { position: "right", labels: { fontColor: "#cccccc" }}}'+\
+		'			type: "doughnut", data: {labels:['+allpilabels[0:-2]+'], datasets: [{ data: ['+allpidata[0:-1]+'], borderColor: "#fff",  backgroundColor:["#e6194b", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4", "#46f0f0", "#f032e6", "#bcf60c", "#fabebe", "#008080", "#e6beff", "#9a6324", "#fffac8", "#800000", "#aaffc3", "#808000", "#ffd8b1", "#000075", "#808080", "#ffffff", "#000000"] }]}, options: {legend: { position: "right", labels: { fontColor: "#666" }}}'+\
 		'		});'+\
 		'		var ctx = document.getElementById("chart2").getContext("2d");'+\
 		'		var myChart = new Chart(ctx, {'+\
-		'			type: "horizontalBar", data: { labels:['+allsslabels[0:-2]+'], datasets: [{ data: ['+allssdata[0:-1]+'], backgroundColor: "rgba(0,140,220,0.8)" }]}, options: {legend: { display: false }, scales: { xAxes: [{ ticks: { beginAtZero: true, fontColor: "#cccccc" } }], yAxes: [{ ticks: { fontColor: "#cccccc" } }] }  }'+\
+		'			type: "horizontalBar", data: { labels:['+allsslabels[0:-2]+'], datasets: [{ data: ['+allssdata[0:-1]+'], backgroundColor: "rgba(0,140,220,0.8)" }]}, options: {legend: { display: false }, scales: { xAxes: [{ ticks: { beginAtZero: true, fontColor: "#666" } }], yAxes: [{ ticks: { fontColor: "#666" } }] }  }'+\
 		'		});'+\
 		'	});'+\
 		'</script>'
+	else:
+		r['pretablestyle'] = 'display:none;'
 
-	r['pretable'] += '<script>'+\
+	r['js'] += '<script>'+\
 	'	$(document).ready(function() {'+\
-	'		$("#scantitle").html("'+html.escape(request.session['scanfile'])+'");'+\
+	'		/* $("#scantitle").html("'+html.escape(request.session['scanfile'])+'"); */ '+\
 	'		$(".dropdown-trigger").dropdown();'+\
 	'		$(".tooltipped").tooltip();'+\
 	'		$(".perco").each(function() { '+\
@@ -709,10 +651,22 @@ def index(request, filterservice="", filterportid=""):
 	'	$("#detailstopports").html(\'<span class="small">'+str(allss[0:-2])+'</span>\');'+\
 	'	});'+\
 	'</script>'
-	#r['pretable'] += '<button class="btn blue" onclick="javascript:$(\'.zeroportopen\').fadeToggle();">Hide/Show hosts with no open ports</button>'+\
-	#'	<button class="btn red" onclick="javascript:genPDF(\''+scanmd5+'\');">PDF</button>'+\
-	#'<br><br>'
 
-	r['pretable'] += ' <input type="hidden" id="cpestring" value="'+urllib.parse.quote_plus(base64.b64encode(json.dumps(cpe).encode()))+'" /> '
+	cpedict = {}
+	#r['cpestring'] = ''
+	for cpeaddr in cpe:
+		for cpei in cpe[cpeaddr]:
+			if re.search('^cpe:.+:.+:.+:.+$', cpei) is not None:
+				#r['cpestring'] += cpei+'<br>'
+				if cpei not in cpedict:
+					cpedict[cpei] = {}
+				if cpeaddr not in cpedict[cpei]:
+					cpedict[cpei][cpeaddr] = 1
 
-	return render(request, 'nmapreport/index.html', r)
+	r['cpestring'] = ' <input type="hidden" id="cpestring" value="'+urllib.parse.quote_plus(base64.b64encode(json.dumps(cpedict).encode()))+'" /> '
+
+	return render(request, 'nmapreport/nmap_hostdetails.html', r)
+
+def about(request):
+	r = {}
+	return render(request, 'nmapreport/nmap_about.html', r)

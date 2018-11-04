@@ -3,18 +3,18 @@
 A Web Dashbord for Nmap XML Report 
 </p>
 
-![WebMap](https://i.imgur.com/U9S089v.png)
+![WebMap](https://i.imgur.com/BOZVc8e.png)
 
-![WebMap](https://i.imgur.com/Ptijc67.png)
-
-![WebMap](https://i.imgur.com/alWZix9.png)
+![WebMap](https://i.imgur.com/33kpQ0J.png)
 
 ## Table Of Contents
 - [Usage](#usage)
-- [Video](#video)
 - [Features](#features)
+- [Changes on v2.1](#changes-on-v21)
+- [PDF Report](#pdf-report)
 - [XML Filenames](#xml-filenames)
 - [CVE and Exploits](#cve-and-exploits)
+- [Network View](#network-view)
 - [Third Parts](#third-parts)
 - [Security Issues](#security-issues)
 - [Contributors](#contributors)
@@ -41,8 +41,24 @@ Now point your browser to http://localhost:8000
 $ curl -sL http://bit.ly/webmapsetup | bash
 ```
 
-## Video
--- coming soon...
+### Upgrade from previous release
+```bash
+$ # stop running webmap container
+$ docker stop webmap
+
+$ # remove webmap container
+$ docker rm webmap
+
+$ # pull new image from dockerhub
+$ docker pull rev3rse/webmap
+
+$ # run WebMap
+$ curl -sL http://bit.ly/webmapsetup | bash
+```
+
+### Run without Docker
+This project is designed to run on a Docker container. IMHO it isn't a good idea to run this on a custom Django installation, 
+but if you need it you can find all building steps inside the [Dockerfile](https://github.com/Rev3rseSecurity/WebMap/blob/v2.1/master/docker/Dockerfile).
 
 ## Features
 - Import and parse Nmap XML files
@@ -53,6 +69,15 @@ $ curl -sL http://bit.ly/webmapsetup | bash
 - Create a PDF Report with charts, details, labels and notes
 - Copy to clipboard as Nikto, Curl or Telnet commands
 - Search for CVE and Exploits based on CPE collected by Nmap
+
+## Changes on v2.1
+- Better usage of Django template
+- Fixed some Nmap XML parse problems
+- Fixed CVE and Exploit collecting problems
+- Add new Network View
+
+## PDF Report
+![WebMap](https://i.imgur.com/alWZix9.png)
 
 ## XML Filenames
 When creating the PDF version of the Nmap XML Report, the XML filename is used as document title on the first page. 
@@ -69,6 +94,9 @@ thanks to the amazing API services by circl.lu, WebMap is able to looking for CV
 Not all CPE are checked over the circl.lu API, but only when a specific version is specified 
 (for example: `cpe:/a:microsoft:iis:7.5` and not `cpe:/o:microsoft:windows`).
 
+## Network View
+![WebMap](https://i.imgur.com/j77jQz9.png)
+
 ## Third Parts
 - [Django](https://www.djangoproject.com)
 - [Materialize CSS](https://materializecss.com)
@@ -76,6 +104,7 @@ Not all CPE are checked over the circl.lu API, but only when a specific version 
 - [Chart.js](https://www.chartjs.org)
 - [Wkhtmltopdf](https://wkhtmltopdf.org)
 - [API cve.circl.lu](https://cve.circl.lu)
+- [vis.js](http://visjs.org/)
 
 ## Security Issues
 This app is not intended to be exposed on the internet. Please, **DO NOT expose** this app to the internet, use your localhost or, 
@@ -92,5 +121,6 @@ I'll mention all contributors in this section of the README file.
 - Neetx [@Neetx](https://github.com/Neetx) (bug on xml with no host up)
 
 ## Contacts
+In order to receive updates about this project, please follow me on twitter:<br>
 Twitter: [@Menin_TheMiddle](https://twitter.com/Menin_TheMiddle)<br>
 YouTube: [Rev3rseSecurity](https://www.youtube.com/rev3rsesecurity)
