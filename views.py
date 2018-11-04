@@ -315,7 +315,7 @@ def index(request, filterservice="", filterportid=""):
 			if hostnum != '0':
 				viewhref = '/setscanfile/'+html.escape(i)
 			else:
-				viewhref = '/" disabled="disabled'
+				viewhref = '#!'
 
 			portstats = nmap_ports_stats(i)
 
