@@ -13,6 +13,7 @@ A Web Dashbord for Nmap XML Report
 - [Features](#features)
 - [XML Filenames](#xml-filenames)
 - [CVE and Exploits](#cve-and-exploits)
+- [Network View](#network-view)
 - [Third Parts](#third-parts)
 - [Security Issues](#security-issues)
 - [Contributors](#contributors)
