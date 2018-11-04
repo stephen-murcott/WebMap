@@ -24,18 +24,8 @@ def reportPDFView(request):
 	scanmd5 = hashlib.md5(str(request.session['scanfile']).encode('utf-8')).hexdigest()
 
 	# collect all cve in cvehost dict
-	cvehost = {}
-	cvefiles = os.listdir('/opt/notes')
-	for cf in cvefiles:
-		m = re.match('^('+scanmd5+')_([a-z0-9]{32,32})\.([0-9]+)\.cve$', cf)
-		if m is not None:
-			if m.group(1) not in cvehost:
-				cvehost[m.group(1)] = {}
-
-			if m.group(2) not in cvehost[m.group(1)]:
-				cvehost[m.group(1)][m.group(2)] = {}
-
-			cvehost[m.group(1)][m.group(2)][m.group(3)] = open('/opt/notes/'+cf, 'r').read()
+	cvehost = get_cve(scanmd5)
+	r['toc'] = '<h3>Table of contents</h3><div class="container">'
 
 	for ik in o['host']:
 
@@ -83,6 +73,7 @@ def reportPDFView(request):
 				noteshost[m.group(1)][m.group(2)] = open('/opt/notes/'+nf, 'r').read()
 
 		if i['status']['@state'] == 'up':
+			r['toc'] += '<b>'+saddress+'</b><br>&nbsp; <a href="#addr'+addressmd5+'">Port scan</a><br>'
 			labelout = ''
 			if scanmd5 in labelhost:
 				if addressmd5 in labelhost[scanmd5]:
@@ -91,7 +82,7 @@ def reportPDFView(request):
 					labelout = '<span style="" class="label '+labelcolor+'">'+html.escape(labelhost[scanmd5][addressmd5])+'</span>'
 
 			hostdetails_html += '<div style="page-break-before: always;">'
-			hostdetails_html += '	<h2>'+html.escape(saddress)+' '+labelout+'</h2> '
+			hostdetails_html += '	<h2 id="addr'+addressmd5+'">'+html.escape(saddress)+' '+labelout+'</h2> '
 
 			hostdetails_html += '	<span class="subtitle">Status: '+html.escape(i['status']['@state'])+', '
 			hostdetails_html += 'Reason: '+html.escape(i['status']['@reason'])+', '
@@ -194,38 +185,41 @@ def reportPDFView(request):
 			if addressmd5 in noteshost[scanmd5]:
 				notesb64 = noteshost[scanmd5][addressmd5]
 				notesout = '<div style="page-break-before: always;">'+\
-				'	<h3>Notes for host '+saddress+'</h3>'+\
+				'	<h3 id="notes'+addressmd5+'">Notes for host '+saddress+'</h3>'+\
 				'	'+base64.b64decode(urllib.parse.unquote(notesb64)).decode('ascii')+\
 				'</div>'
+				r['toc'] += '&nbsp; &nbsp; &nbsp; &nbsp; <a href="#notes'+addressmd5+'">Notes</a><br>'
 
 
 		cveout,cveout_html = '',''
 		if scanmd5 in cvehost:
 			if addressmd5 in cvehost[scanmd5]:
-				for cveport in cvehost[scanmd5][addressmd5]:
-					cvejson = json.loads(cvehost[scanmd5][addressmd5][cveport])
-					for cveobj in cvejson:
+				#for cveport in cvehost[scanmd5][addressmd5]:
+				cvejson = json.loads(cvehost[scanmd5][addressmd5])
+				for cveobj in cvejson:
 
-						cverefout = ''
-						for cveref in cveobj['references']:
-							cverefout += '<a href="'+cveref+'">'+cveref+'</a><br>'
+					cverefout = ''
+					for cveref in cveobj['references']:
+						cverefout += '<a href="'+cveref+'">'+cveref+'</a><br>'
 
-						cveexdbout = ''
-						if 'exploit-db' in cveobj:
-							cveexdbout = '<br><div class="small" style="line-height:20px;"><b>Exploit DB:</b><br>'
-							for cveexdb in cveobj['exploit-db']:
-								if 'title' in cveexdb:
-									cveexdbout += '<a href="'+cveexdb['source']+'">'+html.escape(cveexdb['title'])+'</a><br>'
-							cveexdbout += '</div>'
+					cveexdbout = ''
+					if 'exploit-db' in cveobj:
+						cveexdbout = '<br><div class="small" style="line-height:20px;"><b>Exploit DB:</b><br>'
+						for cveexdb in cveobj['exploit-db']:
+							if 'title' in cveexdb:
+								cveexdbout += '<a href="'+cveexdb['source']+'">'+html.escape(cveexdb['title'])+'</a><br>'
+						cveexdbout += '</div>'
 
-						cveout += '<div style="line-height:28px;padding:10px;margin-top:10px;border-bottom:solid #ccc 1px;">'+\
-						'	<span class="label red">'+html.escape(cveobj['id'])+'</span> '+html.escape(cveobj['summary'])+'<br><br>'+\
-						'	<div class="small" style="line-height:20px;"><b>References:</b><br>'+cverefout+'</div>'+\
-						cveexdbout+\
-						'</div>'
+					cveout += '<div style="line-height:28px;padding:10px;margin-top:10px;border-bottom:solid #ccc 1px;">'+\
+					'	<span class="label red">'+html.escape(cveobj['id'])+'</span> '+html.escape(cveobj['summary'])+'<br><br>'+\
+					'	<div class="small" style="line-height:20px;"><b>References:</b><br>'+cverefout+'</div>'+\
+					cveexdbout+\
+					'</div>'
+
+				r['toc'] += '&nbsp; &nbsp; &nbsp; &nbsp; <a href="#cvelist'+addressmd5+'">CVE List</a><br>'
 
 				cveout_html = '<div style="page-break-before: always;">'+\
-				'	<h3>CVE List for '+saddress+':</h3>'+\
+				'	<h3 id="cvelist'+addressmd5+'">CVE List for '+saddress+':</h3>'+\
 				cveout+\
 				'</div>'
 
@@ -284,6 +278,9 @@ def reportPDFView(request):
 	'	</tbody></table></div>'+\
 	'	<div style="color:#999;margin-top:100px;font-size:18px;"><i>The information contained in these documents is confidential, privileged and only for the information of the intended recipient and may not be used, published or redistributed.</i></div>'+\
 	'</div></div><br>'+\
+	'<!-- <div style="page-break-before: always;">'+\
+	r['toc']+\
+	'</div> --> '+\
 	'<div style="page-break-before: always;">'+\
 	'	<h2>Ports and Services</h2><div class="subtitle">Ports status and services type</div>'+\
 	'	<div class="row" style="margin-top:30px;border-bottom:solid #ccc 1px;padding:10px;">'+\

@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, api, pdf
+from . import views, api, pdf, network
 
 urlpatterns = [
 	path('', views.index, name='index'),
@@ -15,5 +15,6 @@ urlpatterns = [
 	path('api/savenotes/', api.saveNotes, name='genPDF'),
 	path('api/rmnotes/<hashstr>/', api.rmNotes, name='api_rmnotes'),
 	path('api/<address>/<portid>/', api.port_details, name='api_port'),
-	path('view/pdf/', pdf.reportPDFView, name='reportPDFView')
+	path('view/pdf/', pdf.reportPDFView, name='reportPDFView'),
+	path('view/network/', network.visjs, name='network_view')
 ]

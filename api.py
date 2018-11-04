@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-import xmltodict, json, html, os, hashlib, re, requests
+import xmltodict, json, html, os, hashlib, re, requests, base64, urllib.parse
 from collections import OrderedDict
 
 def rmNotes(request, hashstr):
@@ -109,10 +109,27 @@ def getCVE(request):
 
 	if request.method == "POST":
 		scanfilemd5 = hashlib.md5(str(request.session['scanfile']).encode('utf-8')).hexdigest()
-		hostmd5 = hashlib.md5(str(request.POST['host']).encode('utf-8')).hexdigest()
-		portmd5 = hashlib.md5(str(request.POST['port']).encode('utf-8')).hexdigest()
+		#hostmd5 = hashlib.md5(str(request.POST['host']).encode('utf-8')).hexdigest()
+		#portmd5 = hashlib.md5(str(request.POST['port']).encode('utf-8')).hexdigest()
 
 		# request.POST['host']
+
+		cpe = json.loads(base64.b64decode(urllib.parse.unquote(request.POST['cpe'])).decode('ascii'))
+
+		for cpestr in cpe:
+			r = requests.get('http://cve.circl.lu/api/cvefor/'+cpestr)
+			cvejson = r.json()
+
+			for host in cpe[cpestr]:
+				hostmd5 = hashlib.md5(str(host).encode('utf-8')).hexdigest()
+				if type(cvejson) is list and len(cvejson) > 0:
+					res[host] = cvejson[0]
+					f = open('/opt/notes/'+scanfilemd5+'_'+hostmd5+'.cve', 'w')
+					f.write(json.dumps(cvejson))
+					f.close()
+
+		return HttpResponse(json.dumps(res), content_type="application/json")
+
 		r = requests.get('http://cve.circl.lu/api/cvefor/'+request.POST['cpe'])
 
 		if request.POST['host'] not in res:
@@ -122,7 +139,7 @@ def getCVE(request):
 
 		if type(cvejson) is list and len(cvejson) > 0:
 			res[request.POST['host']][request.POST['port']] = cvejson[0]
-			f = open('/opt/notes/'+scanfilemd5+'_'+hostmd5+'.'+request.POST['port']+'.cve', 'w')
+			f = open('/opt/notes/'+scanfilemd5+'_'+hostmd5+'.cve', 'w')
 			f.write(json.dumps(cvejson))
 			f.close()
 
