@@ -68,6 +68,12 @@ $ curl -sL http://bit.ly/webmapsetup | bash
 - Copy to clipboard as Nikto, Curl or Telnet commands
 - Search for CVE and Exploits based on CPE collected by Nmap
 
+## Changes on v2.1
+- Better usage of Django template
+- Fixed some Nmap XML parse problems
+- Fixed CVE and Exploit collecting problems
+- Add new Network View
+
 ## XML Filenames
 When creating the PDF version of the Nmap XML Report, the XML filename is used as document title on the first page. 
 WebMap will replace some parts of the filename as following:
@@ -93,6 +99,7 @@ Not all CPE are checked over the circl.lu API, but only when a specific version 
 - [Chart.js](https://www.chartjs.org)
 - [Wkhtmltopdf](https://wkhtmltopdf.org)
 - [API cve.circl.lu](https://cve.circl.lu)
+- [vis.js](http://visjs.org/)
 
 ## Security Issues
 This app is not intended to be exposed on the internet. Please, **DO NOT expose** this app to the internet, use your localhost or, 
@@ -109,5 +116,6 @@ I'll mention all contributors in this section of the README file.
 - Neetx [@Neetx](https://github.com/Neetx) (bug on xml with no host up)
 
 ## Contacts
+In order to receive updates about this project, please follow me on twitter:<br>
 Twitter: [@Menin_TheMiddle](https://twitter.com/Menin_TheMiddle)<br>
 YouTube: [Rev3rseSecurity](https://www.youtube.com/rev3rsesecurity)
