@@ -330,7 +330,6 @@ def index(request, filterservice="", filterportid=""):
 
 		return render(request, 'nmapreport/nmap_xmlfiles.html', r)
 
-
 	scanmd5 = hashlib.md5(str(request.session['scanfile']).encode('utf-8')).hexdigest()
 	r['scanfile'] = html.escape(str(request.session['scanfile']))
 	r['scanmd5'] = scanmd5
