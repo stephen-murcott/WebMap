@@ -9,12 +9,14 @@ A Web Dashbord for Nmap XML Report
 
 ## Table Of Contents
 - [Usage](#usage)
+- [Video](#video)
 - [Features](#features)
 - [Changes on v2.1](#changes-on-v21)
 - [PDF Report](#pdf-report)
 - [XML Filenames](#xml-filenames)
 - [CVE and Exploits](#cve-and-exploits)
 - [Network View](#network-view)
+- [RESTful API](#restful-api)
 - [Third Parts](#third-parts)
 - [Security Issues](#security-issues)
 - [Contributors](#contributors)
@@ -60,6 +62,12 @@ $ curl -sL http://bit.ly/webmapsetup | bash
 This project is designed to run on a Docker container. IMHO it isn't a good idea to run this on a custom Django installation, 
 but if you need it you can find all building steps inside the [Dockerfile](https://github.com/Rev3rseSecurity/WebMap/blob/v2.1/master/docker/Dockerfile).
 
+## Video
+The HTML template changes often. This video could not be up to date with the latest version.
+
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/TujtG1Ki0TQ/0.jpg)](https://www.youtube.com/watch?v=TujtG1Ki0TQ)
+
+
 ## Features
 - Import and parse Nmap XML files
 - Statistics and Charts on discovered services, ports, OS, etc...
@@ -69,12 +77,14 @@ but if you need it you can find all building steps inside the [Dockerfile](https
 - Create a PDF Report with charts, details, labels and notes
 - Copy to clipboard as Nikto, Curl or Telnet commands
 - Search for CVE and Exploits based on CPE collected by Nmap
+- RESTful API
 
 ## Changes on v2.1
 - Better usage of Django template
 - Fixed some Nmap XML parse problems
 - Fixed CVE and Exploit collecting problems
 - Add new Network View
+- Add RESTful API
 
 ## PDF Report
 ![WebMap](https://i.imgur.com/alWZix9.png)
@@ -96,6 +106,145 @@ Not all CPE are checked over the circl.lu API, but only when a specific version 
 
 ## Network View
 ![WebMap](https://i.imgur.com/j77jQz9.png)
+
+## RESTful API
+From `v2.1` WebMap has a RESTful API frontend that makes users able to query their scan files with something like:
+
+```bash
+curl -s 'http://localhost:8000/api/v1/scan'
+
+    "webmap_version": "v2.1/master",
+    "scans": {
+        "scanme.nmap.org.xml": {
+            "filename": "scanme.nmap.org.xml",
+            "startstr": "Sun Nov  4 16:22:46 2018",
+            "nhost": "1",
+            "port_stats": {
+                "open": 42,
+                "closed": 0,
+                "filtered": 0
+            }
+        },
+        "hackthebox.xml": {
+            "filename": "hackthebox.xml",
+            "startstr": "Mon Oct  8 20:56:32 2018",
+            "nhost": "256",
+            "port_stats": {
+                "open": 67,
+                "closed": 0,
+                "filtered": 2
+            }
+        }
+    }
+}
+```
+
+A user can get information about a single scan by append to the URL the XML filename:
+
+```bash
+curl -v 'http://localhost:8000/api/v1/scan/hackthebox.xml'
+
+{
+    "file": "hackthebox.xml",
+    "hosts": {
+        "10.10.10.2": {
+            "hostname": {},
+            "label": "",
+            "notes": ""
+        },
+        "10.10.10.72": {
+            "hostname": {
+                "PTR": "streetfighterclub.htb"
+            },
+            "label": "",
+            "notes": ""
+        },
+        "10.10.10.76": {
+            "hostname": {},
+            "label": "",
+            "notes": ""
+        },
+        "10.10.10.77": {
+            "hostname": {},
+            "label": "Vulnerable",
+            "notes": "PHNwYW4gY2xhc3M9ImxhYmVsIGdyZWVuIj5SRU1FRElBVElPTjwvc3Bhbj4gVXBncmFkZSB0byB0aGUgbGF0ZXN0IHZlcnNpb24g"
+        },
+...
+```
+
+and he can get all information about a single host by append the IP address to URL:
+
+```bash
+curl -v 'http://localhost:8000/api/v1/scan/hackthebox.xml/10.10.10.87'
+
+    "file": "hackthebox.xml",
+    "hosts": {
+        "10.10.10.87": {
+            "ports": [
+                {
+                    "port": "22",
+                    "name": "ssh",
+                    "state": "open",
+                    "protocol": "tcp",
+                    "reason": "syn-ack",
+                    "product": "OpenSSH",
+                    "version": "7.5",
+                    "extrainfo": "protocol 2.0"
+                },
+                {
+                    "port": "80",
+                    "name": "http",
+                    "state": "open",
+                    "protocol": "tcp",
+                    "reason": "syn-ack",
+                    "product": "nginx",
+                    "version": "1.12.2",
+                    "extrainfo": ""
+                },
+                {
+                    "port": "8888",
+                    "name": "sun-answerbook",
+                    "state": "filtered",
+                    "protocol": "tcp",
+                    "reason": "no-response",
+                    "product": "",
+                    "version": "",
+                    "extrainfo": ""
+                }
+            ],
+            "hostname": {},
+            "label": "Checked",
+            "notes": "",
+            "CVE": [
+                {
+                    "Modified": "2018-08-17T15:29:00.253000",
+                    "Published": "2018-08-17T15:29:00.223000",
+                    "cvss": "5.0",
+                    "cwe": "CWE-200",
+                    "exploit-db": [
+                        {
+                            "description": "OpenSSH 7.7 - Username Enumeration. CVE-2018-15473. Remote exploit for Linux platform",
+                            "file": "exploits/linux/remote/45233.py",
+                            "id": "EDB-ID:45233",
+                            "last seen": "2018-08-21",
+                            "modified": "2018-08-21",
+                            "platform": "linux",
+                            "port": "",
+                            "published": "2018-08-21",
+                            "reporter": "Exploit-DB",
+                            "source": "https://www.exploit-db.com/download/45233/",
+                            "title": "OpenSSH 7.7 - Username Enumeration",
+                            "type": "remote"
+                        },
+                        {
+                            "id": "EDB-ID:45210"
+                        }
+                    ],
+                    "id": "CVE-2018-15473",
+                    "last-modified": "2018-11-02T06:29:06.993000",
+                    "metasploit": [
+...
+```
 
 ## Third Parts
 - [Django](https://www.djangoproject.com)
