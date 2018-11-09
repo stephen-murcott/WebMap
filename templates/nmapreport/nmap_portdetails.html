@@ -53,13 +53,13 @@
 									{{ v.extrainfo|safe }}
 								</td>
 								<td>
-									<ul id="dropdown{{ pel }}" class="dropdown-content" style="min-width:300px;">
+									<ul id="dropdown{{ v.pel }}" class="dropdown-content" style="min-width:300px;">
 										<li><a href="#!" onclick="javascript:apiPortDetails('{{ address }}','{{ v.portid }}');">Show details</a></li>
 										<li class="divider" tabindex="-1"></li>
 										<li><a href="#!" class="btncpy" data-clipboard-text="curl -v -A 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1' -k 'http://{{ address }}:{{ v.portid }}'">Copy as curl command</a></li>
 										<li><a href="#!" class="btncpy" data-clipboard-text="nikto -host 'http://{{ address }}:{{ v.portid }}'">Copy as nikto command</a></li>
 										<li><a href="#!" class="btncpy" data-clipboard-text="telnet {{ address }} {{ v.portid }}">Copy as telnet command</a></li>
-									</ul><a class="dropdown-trigger btn blue right" href="#!" data-target="dropdown{{ pel }}"><i class="material-icons">arrow_drop_down</i></a>
+									</ul><a class="dropdown-trigger btn blue right" href="#!" data-target="dropdown{{ v.pel }}"><i class="material-icons">arrow_drop_down</i></a>
 								</td>
 							</tr>
 						{% endfor %}

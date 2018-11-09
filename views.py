@@ -59,8 +59,8 @@ def details(request, address):
 	cvehost = get_cve(scanmd5)
 
 	r['trhead'] = '<tr><th>Port</th><th style="width:300px;">Product / Version</th><th>Extra Info</th><th>&nbsp;</th></tr>'
-	pel=0
 	for ik in o['host']:
+		pel=0
 		# this fix single host report
 		if type(ik) is dict:
 			i = ik
