@@ -62,49 +62,62 @@
 
 		{{ js|safe }}
 
-		<div class="card">
-		<div class="card-content">
-		<table>
-			<thead>
-				<tr><th width="260">Host</th><th>Port State</th><th width="160" style="text-align:center;">Tot Ports</th><th width="200" class="hide-on-small-only">Services</th><th width="200" class="hide-on-small-only">Ports</th><th>&nbsp;</th></tr>
-			</thead>
-			<tbody>
-				{% for i,v in tr.items %}
-					<tr>
-						<td>
+		{% for i,v in tr.items %}
+			<div class="card">
+
+
+				<div class="card-content">
+					<div class="row" style="padding:0px;margin-bottom:0px;">
+						<div class="col s4" style="border-right:solid #eee 1px;">
 							<div class="hindex">{{ v.hostindex }}</div>
 							{{ v.newlabelout|safe }}
-							<b><a href="/report/{{ i }}" class="blue-text text-darken-3">{{ i }}</a></b>{{ v.hostname|safe }}
-							{{ v.notesout|safe }}
-							{{ v.cveout|safe }}
-						</td>
-						{{ v.portstate|safe }}
-						<td class="hide-on-small-only" style="text-align:center;">
-							{{ v.totports }}
-						</td>
-						<td class="small hide-on-small-only">{{ v.services|safe }}</td>
-						<td class="small hide-on-small-only">
-							{{ v.ports|safe }}
-						</td>
-						<td>
-						<ul id="hostdd{{ v.hostindex }}" class="dropdown-content" style="min-width:200px;">
-							<li><a href="#!" onclick="javascript:setLabel('host', 'Vulnerable', '{{ v.addressmd5 }}', {{ v.hostindex }});"><span class="tmlabel red">Vulnerable</span></a></li>
-							<li><a href="#!" onclick="javascript:setLabel('host', 'Critical', '{{ v.addressmd5 }}', {{ v.hostindex }});"><span class="tmlabel black">Critical</span></a></li>
-							<li><a href="#!" onclick="javascript:setLabel('host', 'Warning', '{{ v.addressmd5 }}', {{ v.hostindex }});"><span class="tmlabel orange"><span class="tmlabel orange">Warning</span></a></li>
-							<li><a href="#!" onclick="javascript:setLabel('host', 'Checked', '{{ v.addressmd5 }}', {{ v.hostindex }});"><span class="tmlabel blue"><span class="tmlabel blue">Checked</span></a></li>
-							<li><a href="#!" onclick="javascript:removeLabel('host', '{{ v.addressmd5 }}', {{ v.hostindex }});">Remove label</a></li>
-							<li class="divider"></li>
-							<li><a href="#!" onclick="javascript:openNotes('{{ v.addressmd5 }}', '{{ v.notesb64 }}');">Insert notes</a></li>
-							{{ v.removenotes|safe }}
-						</ul>
-						<button class="btn blue right dropdown-trigger" data-target="hostdd{{ v.hostindex }}"><i class="material-icons">arrow_drop_down</i></button>
+							<h5><a href="/report/{{ i }}" class="blue-text text-darken-3">{{ i }}</a></h5>{{ v.hostname|safe }}
 
-						</td>
-					</tr>
-				{% endfor %}
-			</tbody>
-		</table>
-		</div>
-		</div>
+			<i class="fas fa-door-open green-text"></i> <span class="green-text">{{ v.po }}</span>
+			<i class="fas fa-door-closed red-text"></i> <span class="red-text">{{ v.pc }}</span>
+			<i class="fas fa-filter orange-text"></i> <span class="orange-text">{{ v.pf }}</span>
+
+						</div>
+						<div class="col s4 small">
+							<b>OPEN PORTS %</b>
+							{{ v.portstate|safe }}
+
+							{% if v.tags|length > 0 %}
+								<br><b>GUESSED TAGS</b><br>
+								{% for i in v.tags %}
+									<span class="blue white-text" style="border-radius:4px;padding:4px;font-size:10px;">#{{ i }}</span>
+								{% endfor %}
+							{% endif %}
+						</div>
+						<div class="col s2 small">
+							<b>SERVICES</b><br>
+							{{ v.services|safe }}
+						</div>
+						<div class="col s2 small">
+							<b>PORTS</b><br>
+							{{ v.ports|safe }}
+						</div>
+					</div>
+				</div>
+
+				<div class="card-action">
+					<ul id="hostdd{{ v.hostindex }}" class="dropdown-content" style="min-width:200px;">
+						<li><a href="#!" onclick="javascript:setLabel('host', 'Vulnerable', '{{ v.addressmd5 }}', {{ v.hostindex }});"><span class="tmlabel red">Vulnerable</span></a></li>
+						<li><a href="#!" onclick="javascript:setLabel('host', 'Critical', '{{ v.addressmd5 }}', {{ v.hostindex }});"><span class="tmlabel black">Critical</span></a></li>
+						<li><a href="#!" onclick="javascript:setLabel('host', 'Warning', '{{ v.addressmd5 }}', {{ v.hostindex }});"><span class="tmlabel orange"><span class="tmlabel orange">Warning</span></a></li>
+						<li><a href="#!" onclick="javascript:setLabel('host', 'Checked', '{{ v.addressmd5 }}', {{ v.hostindex }});"><span class="tmlabel blue"><span class="tmlabel blue">Checked</span></a></li>
+						<li><a class="grey-text" href="#!" onclick="javascript:removeLabel('host', '{{ v.addressmd5 }}', {{ v.hostindex }});">Remove label</a></li>
+						<li class="divider"></li>
+						<li><a class="grey-text" href="#!" onclick="javascript:openNotes('{{ v.addressmd5 }}', '{{ v.notesb64 }}');">Insert notes</a></li>
+						{{ v.removenotes|safe }}
+					</ul>
+					<a href="#!" class="grey-text dropdown-trigger" data-target="hostdd{{ v.hostindex }}"><i class="fas fa-ellipsis-v"></i> Actions</a>
+
+					{{ v.notesout|safe }}
+
+					{{ v.cveout|safe }}
+				</div>
+			</div>
+		{% endfor %}
 	</div>
 {% endblock %}
