@@ -235,7 +235,10 @@ def apiv1_hostdetails(request, scanfile, faddress=""):
 			#			cvecount = (cvecount + 1)
 
 
-			r['hosts'][address] = {'ports':[], 'hostname':hostname, 'label':labelout, 'notes':notesb64, 'CVE':cveout}
+			if faddress == "":
+				r['hosts'][address] = {'hostname':hostname, 'label':labelout, 'notes':notesb64}
+			else:
+				r['hosts'][address] = {'ports':[], 'hostname':hostname, 'label':labelout, 'notes':notesb64, 'CVE':cveout}
 
 			if 'ports' in i and 'port' in i['ports']:
 				for pobj in i['ports']['port']:
@@ -252,11 +255,33 @@ def apiv1_hostdetails(request, scanfile, faddress=""):
 					ss[p['service']['@name']] = p['service']['@name']
 					pp[p['@portid']] = p['@portid']
 
-					r['hosts'][address]['ports'].append({
-						    'port': p['@portid'],
-						    'name': p['service']['@name'],
-						   'state': p['state']['@state']
-					})
+					v,z,e='','',''
+					if '@version' in p['service']:
+						v = p['service']['@version']
+					#else:
+					#	v = 'no-version'
+
+					if '@product' in p['service']:
+						z = p['service']['@product']
+					#else:
+					#	z = 'no-product'
+
+					if '@extrainfo' in p['service']:
+						e = p['service']['@extrainfo']
+					#else:
+					#	e = 'no-info'
+
+					if faddress != "":
+						r['hosts'][address]['ports'].append({
+							    'port': p['@portid'],
+							    'name': p['service']['@name'],
+							   'state': p['state']['@state'],
+							'protocol': p['@protocol'],
+							  'reason': p['state']['@reason'],
+							 'product': z,
+							 'version': v,
+						  'extrainfo': e
+						})
 
 	return HttpResponse(json.dumps(r, indent=4), content_type="application/json")
 
