@@ -330,7 +330,6 @@ def index(request, filterservice="", filterportid=""):
 
 		return render(request, 'nmapreport/nmap_xmlfiles.html', r)
 
-
 	scanmd5 = hashlib.md5(str(request.session['scanfile']).encode('utf-8')).hexdigest()
 	r['scanfile'] = html.escape(str(request.session['scanfile']))
 	r['scanmd5'] = scanmd5
@@ -379,12 +378,12 @@ def index(request, filterservice="", filterportid=""):
 		if 'hostnames' in i and type(i['hostnames']) is dict:
 			# hostname = json.dumps(i['hostnames'])
 			if 'hostname' in i['hostnames']:
-				hostname += '<br>'
+				#hostname += '<br>'
 				if type(i['hostnames']['hostname']) is list:
 					for hi in i['hostnames']['hostname']:
-						hostname += '<span class="small grey-text"><b>'+hi['@type']+':</b> '+hi['@name']+'</span><br>'
+						hostname += '<div class="small grey-text"><b>'+hi['@type']+':</b> '+hi['@name']+'</div>'
 				else:
-					hostname += '<span class="small grey-text"><b>'+i['hostnames']['hostname']['@type']+':</b> '+i['hostnames']['hostname']['@name']+'</span><br>'
+					hostname += '<div class="small grey-text"><b>'+i['hostnames']['hostname']['@type']+':</b> '+i['hostnames']['hostname']['@name']+'</div>'
 
 		if i['status']['@state'] == 'up':
 			hostsup = (hostsup + 1)
@@ -404,6 +403,7 @@ def index(request, filterservice="", filterportid=""):
 		cpe[address] = {}
 
 		striggered = False
+		e = ''
 		if 'ports' in i and 'port' in i['ports']:
 			for pobj in i['ports']['port']:
 				if type(pobj) is dict:
@@ -424,6 +424,9 @@ def index(request, filterservice="", filterportid=""):
 
 				ss[p['service']['@name']] = p['service']['@name']
 				pp[p['@portid']] = p['@portid']
+
+				if '@extrainfo' in p['service']:
+					e = p['service']['@extrainfo']
 
 				# cpehtml = ''
 				if 'cpe' in p['service']:
@@ -492,14 +495,14 @@ def index(request, filterservice="", filterportid=""):
 					labelmargin = labelToMargin(labelhost[scanmd5][addressmd5])
 					labelout = '<span id="hostlabel'+str(hostindex)+'" style="margin-left:'+labelmargin+'" class="rightlabel '+labelcolor+'">'+html.escape(labelhost[scanmd5][addressmd5])+'</span>'
 					newlabelout = '<div id="hostlabel'+str(hostindex)+'" style="z-index:99;transform: rotate(-8deg);margin-top:-14px;margin-left:-40px;" class="leftlabel '+labelcolor+'">'+html.escape(labelhost[scanmd5][addressmd5])+'</div>'+\
-										'<div id="hostlabelbb'+str(hostindex)+'" class="'+labelcolor+'" style="border-radius:0px 4px 0px 4px;z-index:98;position:absolute;width:18px;height:10px;margin-left:-48px;margin-top:-3px;"></div>'
+										'<div id="hostlabelbb'+str(hostindex)+'" class="'+labelcolor+'" style="border-radius:0px 4px 0px 4px;z-index:98;position:absolute;width:18px;height:10px;margin-left:-54px;margin-top:-3px;"></div>'
 
 			notesout,notesb64,removenotes = '','',''
 			if scanmd5 in noteshost:
 				if addressmd5 in noteshost[scanmd5]:
 					notesb64 = noteshost[scanmd5][addressmd5]
-					notesout = '<br><a id="noteshost'+str(hostindex)+'" href="#!" onclick="javascript:openNotes(\''+hashlib.md5(str(address).encode('utf-8')).hexdigest()+'\', \''+notesb64+'\');" class="small"><i class="fas fa-comment"></i> contains notes</a>'
-					removenotes = '<li><a href="#!" onclick="javascript:removeNotes(\''+addressmd5+'\', \''+str(hostindex)+'\');">Remove notes</a></li>'
+					notesout = '<a id="noteshost'+str(hostindex)+'" class="grey-text" href="#!" onclick="javascript:openNotes(\''+hashlib.md5(str(address).encode('utf-8')).hexdigest()+'\', \''+notesb64+'\');"><i class="fas fa-comment"></i> contains notes</a>'
+					removenotes = '<li><a href="#!" class="grey-text" onclick="javascript:removeNotes(\''+addressmd5+'\', \''+str(hostindex)+'\');">Remove notes</a></li>'
 
 			cveout = ''
 			cvecount = 0
@@ -509,17 +512,25 @@ def index(request, filterservice="", filterportid=""):
 					for cveobj in cvejson:
 						cvecount = (cvecount + 1)
 
-					cveout = '<br><span class="small grey-text"><i class="fas fa-exclamation-triangle orange-text"></i> '+str(cvecount)+' CVE found</span>'
+					cveout = '<a href="#!" class="grey-text"><i class="fas fa-exclamation-triangle"></i> '+str(cvecount)+' CVE found</a>'
 
 			if (filterservice != "" and striggered is True) or (filterportid != "" and striggered is True) or (filterservice == "" and filterportid == ""):
-				portstateout = '<td style="font-size:10px;color:#999;width:300px;"><div style="overflow:none;background-color:#eee;" class="tooltipped" data-position="top" data-tooltip="'+str(po)+' open, '+str(pc)+' closed, '+str(pf)+' filtered">'+\
+				portstateout = '<div style="overflow:none;background-color:#eee;" class="tooltipped" data-position="top" data-tooltip="'+str(po)+' open, '+str(pc)+' closed, '+str(pf)+' filtered">'+\
 				'		<div class="perco" data-po="'+str(po)+'" style="padding-left:16px;padding-right:20px;"><b>'+str(po)+'</b></div>'+\
-				' </div></td>'
+				' </div>'
 
 				if (filterservice != "" and striggered is True):
-					portstateout = '<td style="font-size:10px;color:#999;width:300px;"><div style="overflow:none;background-color:#eee;" class="tooltipped" data-position="top" data-tooltip="'+str(po)+' open, '+str(pc)+' closed, '+str(pf)+' filtered">'+\
+					portstateout = '<div style="overflow:none;background-color:#eee;" class="tooltipped" data-position="top" data-tooltip="'+str(po)+' open, '+str(pc)+' closed, '+str(pf)+' filtered">'+\
 					'		<div class="perco" data-po="'+str(po)+'" data-pt="'+str((po + pf + pc))+'" style="padding-left:16px;padding-right:20px;"><b>'+str(po)+'</b></div>'+\
-					'	</div></td>'
+					'	</div>'
+
+				tags = []
+				extrainfosplit = e.split(' ')
+				for eis in extrainfosplit:
+					if re.search('[a-zA-Z0-9\_]+\/[0-9\.]+', eis) is not None:
+						robj = re.search('([a-zA-Z0-9\_]+)\/([0-9\.]+)', eis)
+						tags.append(robj.group(1)+' '+robj.group(2))
+
 
 				r['tr'][address] = {
 					'hostindex': str(hostindex),
@@ -531,6 +542,7 @@ def index(request, filterservice="", filterportid=""):
 					'po': po,
 					'pc': pc,
 					'pf': pf,
+					'tags':tags,
 					'totports': str((po + pf + pc)),
 					'services': str(services[0:-2]),
 					'ports': str(tdports[0:-2]),

@@ -33,7 +33,6 @@ function checkCVE() {
 
 	return 0;
 	
-
 	cpetot = Object.keys(cpe).length;
 	console.log(cpetot);
 
@@ -72,7 +71,6 @@ function checkCVE() {
 			$('#modalfooter').html('<button class="btn blue" onclick="javascript:location.reload();">Reload</button>');
 		}
 	}, 2000);
-
 }
 
 function checkCPETOT() {
@@ -231,7 +229,7 @@ function setLabel(type, label, hashstr, i) {
 			$('#hostlabelbb'+i).css("position", 'absolute')
 			$('#hostlabelbb'+i).css("width", '18px')
 			$('#hostlabelbb'+i).css("height", '10px')
-			$('#hostlabelbb'+i).css("margin-left", '-48px')
+			$('#hostlabelbb'+i).css("margin-left", '-54px')
 			$('#hostlabelbb'+i).css("margin-top", '-3px')
 			$('#hostlabelbb'+i).attr("class","")
 			$('#hostlabelbb'+i).addClass(color);
