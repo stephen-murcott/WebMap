@@ -103,20 +103,21 @@ def visjs(request):
 
 
 					v,z,e = '','',''
-					if '@version' in p['service']:
-						portnodes[addressmd5][p['@portid']]['version'] = p['service']['@version']
-					else:
-						portnodes[addressmd5][p['@portid']]['version'] = 'No Version'
+					if 'service' in p:
+						if '@version' in p['service']:
+							portnodes[addressmd5][p['@portid']]['version'] = p['service']['@version']
+						else:
+							portnodes[addressmd5][p['@portid']]['version'] = 'No Version'
 
-					if '@product' in p['service']:
-						portnodes[addressmd5][p['@portid']]['product'] = p['service']['@product']
-					else:
-						portnodes[addressmd5][p['@portid']]['product'] = 'No Product'
+						if '@product' in p['service']:
+							portnodes[addressmd5][p['@portid']]['product'] = p['service']['@product']
+						else:
+							portnodes[addressmd5][p['@portid']]['product'] = 'No Product'
 
-					if '@extrainfo' in p['service']:
-						portnodes[addressmd5][p['@portid']]['extrainfo'] = p['service']['@extrainfo']
-					else:
-						portnodes[addressmd5][p['@portid']]['extrainfo'] = ''
+						if '@extrainfo' in p['service']:
+							portnodes[addressmd5][p['@portid']]['extrainfo'] = p['service']['@extrainfo']
+						else:
+							portnodes[addressmd5][p['@portid']]['extrainfo'] = ''
 
 		# this fix single host report
 		if type(ik) is not dict:

@@ -122,8 +122,9 @@ def details(request, address):
 
 				pel = (pel + 1)
 				oshtml = ''
-				if '@ostype' in p['service']:
-					oshtml = '<div style="font-family:monospace;padding:6px;margin:6px;border-left:solid #666 1px;"><sup style="border-bottom:solid #ccc 1px;">Operating System</sup><br>'+html.escape(p['service']['@ostype'])+'</div>'
+				if 'service' in p:
+					if '@ostype' in p['service']:
+						oshtml = '<div style="font-family:monospace;padding:6px;margin:6px;border-left:solid #666 1px;"><sup style="border-bottom:solid #ccc 1px;">Operating System</sup><br>'+html.escape(p['service']['@ostype'])+'</div>'
 
 				so = ''
 				if 'script' in p:
@@ -185,8 +186,13 @@ def details(request, address):
 					'<button onclick="javascript:apiPortDetails(\''+html.escape(address)+'\',\''+html.escape(p['@portid'])+'\');" class="btn blue right"><i class="material-icons">receipt</i></button></td>'+\
 					'</tr>'
 				elif p['state']['@state'] == 'filtered':
+					if 'service' in p:
+						servicename = p['service']['@name']
+					else:
+						servicename = ''
+
 					r['tr'][p['@portid']] = {
-						'service': p['service']['@name'],
+						'service': servicename,
 						'protocol': p['@protocol'],
 						'portid': p['@portid'],
 						'state': p['state']['@state'],
@@ -194,7 +200,7 @@ def details(request, address):
 						'pel': str(pel)
 					}
 					r['trhost'] += '<tr><td><span class="new badge grey" data-badge-caption="">'+p['@protocol']+' / '+p['@portid']+'</span><br>'+\
-					'<span style="color:#999;font-size:12px;">'+p['service']['@name']+'</span></td>'+\
+					'<span style="color:#999;font-size:12px;">'+servicename+'</span></td>'+\
 					'<td colspan="2" style="color:#999;font-size:12px;">State: filtered<br>Reason: '+p['state']['@reason']+'</td>'+\
 					'<td><button onclick="javascript:apiPortDetails(\''+html.escape(address)+'\',\''+html.escape(p['@portid'])+'\');" class="btn blue right"><i class="material-icons">receipt</i></button></td></tr>'
 				else:
@@ -422,33 +428,35 @@ def index(request, filterservice="", filterportid=""):
 				if filterportid != "" and p['@portid'] == filterportid:
 					striggered = True
 
-				ss[p['service']['@name']] = p['service']['@name']
 				pp[p['@portid']] = p['@portid']
 
-				if '@extrainfo' in p['service']:
-					e = p['service']['@extrainfo']
+				if 'service' in p:
+					ss[p['service']['@name']] = p['service']['@name']
 
-				# cpehtml = ''
-				if 'cpe' in p['service']:
-					if type(p['service']['cpe']) is list:
-						for cpei in p['service']['cpe']:
-							cpe[address][cpei] = cpei
-					else:
-						cpe[address][p['service']['cpe']] = p['service']['cpe']
+					if '@extrainfo' in p['service']:
+						e = p['service']['@extrainfo']
+
+					# cpehtml = ''
+					if 'cpe' in p['service']:
+						if type(p['service']['cpe']) is list:
+							for cpei in p['service']['cpe']:
+								cpe[address][cpei] = cpei
+						else:
+							cpe[address][p['service']['cpe']] = p['service']['cpe']
 		
 
-				if '@ostype' in p['service']:
-					if p['service']['@ostype'] in allostypelist:
-						allostypelist[p['service']['@ostype']] = (allostypelist[p['service']['@ostype']] +1)
+					if '@ostype' in p['service']:
+						if p['service']['@ostype'] in allostypelist:
+							allostypelist[p['service']['@ostype']] = (allostypelist[p['service']['@ostype']] +1)
+						else:
+							allostypelist[p['service']['@ostype']] = 1;
+
+						ost[p['service']['@ostype']] = p['service']['@ostype']
+
+					if p['service']['@name'] in sscount:
+						sscount[p['service']['@name']] = (sscount[p['service']['@name']] + 1)
 					else:
-						allostypelist[p['service']['@ostype']] = 1;
-
-					ost[p['service']['@ostype']] = p['service']['@ostype']
-
-				if p['service']['@name'] in sscount:
-					sscount[p['service']['@name']] = (sscount[p['service']['@name']] + 1)
-				else:
-					sscount[p['service']['@name']] = 1
+						sscount[p['service']['@name']] = 1
 
 				if p['@portid'] in picount:
 					picount[p['@portid']] = (picount[p['@portid']] + 1)
