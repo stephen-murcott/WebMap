@@ -80,7 +80,9 @@ def nmap_ports_stats(scanfile):
 				else:
 					lastportid = p['@portid']
 
-				ss[p['service']['@name']] = p['service']['@name']
+				if 'service' in p:
+					ss[p['service']['@name']] = p['service']['@name']
+
 				pp[p['@portid']] = p['@portid']
 
 				if p['state']['@state'] == 'closed':
