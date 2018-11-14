@@ -108,8 +108,15 @@ def genPDF(request):
 def getCVE(request):
 	res = {}
 
+
 	if request.method == "POST":
 		scanfilemd5 = hashlib.md5(str(request.session['scanfile']).encode('utf-8')).hexdigest()
+		cveproc = os.popen('python3 /opt/nmapdashboard/nmapreport/nmap/cve.py '+request.session['scanfile'])
+		res['cveout'] = cveproc.read()
+		cveproc.close()
+
+		return HttpResponse(json.dumps(res), content_type="application/json")
+
 		#hostmd5 = hashlib.md5(str(request.POST['host']).encode('utf-8')).hexdigest()
 		#portmd5 = hashlib.md5(str(request.POST['port']).encode('utf-8')).hexdigest()
 

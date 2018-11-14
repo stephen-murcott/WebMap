@@ -88,7 +88,13 @@ def details(request, address):
 
 			r['address'] = html.escape(str(saddress))
 			r['hostname'] = hostname
-			r['scanfile'] = request.session['scanfile']
+
+			scantitle = request.session['scanfile'].replace('.xml','').replace('_',' ')
+			if re.search('^webmapsched\_[0-9\.]+', request.session['scanfile']):
+				m = re.search('^webmapsched\_[0-9\.]+\_(.+)', request.session['scanfile'])
+				scantitle = m.group(1).replace('.xml','').replace('_',' ')
+			r['scanfile'] = scantitle
+
 
 			labelout = '<span id="hostlabel"></span>'
 			if scanmd5 in labelhost:
@@ -156,9 +162,9 @@ def details(request, address):
 					if 'cpe' in p['service']:
 						if type(p['service']['cpe']) is list:
 							for cpei in p['service']['cpe']:
-								cpe += '<span class="grey-text" style="font-family:monospace;font-size:12px;">'+html.escape(cpei)+'</span><br>'
+								cpe += '<div class="grey-text" style="font-family:monospace;font-size:12px;">'+html.escape(cpei)+'</div>'
 						else:
-								cpe = '<span class="grey-text" style="font-family:monospace;font-size:12px;">'+html.escape(p['service']['cpe'])+'</span><br>'
+								cpe = '<div class="grey-text" style="font-family:monospace;font-size:12px;">'+html.escape(p['service']['cpe'])+'</div>'
 							
 					r['tr'][p['@portid']] = {
 						'service': p['service']['@name'],
@@ -166,6 +172,7 @@ def details(request, address):
 						'portid': p['@portid'],
 						'product': z,
 						'version': v,
+						'cpe':cpe,
 						'state': p['state']['@state'],
 						'reason': p['state']['@reason'],
 						'extrainfo': e,
@@ -236,28 +243,36 @@ def details(request, address):
 	cveout = ''
 	if scanmd5 in cvehost:
 		if addressmd5 in cvehost[scanmd5]:
-			#for cveport in cvehost[scanmd5][addressmd5]:
 			cvejson = json.loads(cvehost[scanmd5][addressmd5])
-			# r['out'] = json.dumps(cvejson, indent=4)
-			for cveobj in cvejson:
 
-				cverefout = ''
-				for cveref in cveobj['references']:
-					cverefout += '<a href="'+cveref+'">'+cveref+'</a><br>'
+			for i in cvejson:
+				if type(i) is list:
+					listcve = i
+					#cveout += 'list<hr>'
+				elif type(i) is dict:
+					listcve = [i]
+					#cveout += 'dict<hr>'
+				#continue
 
-				cveexdbout = ''
-				if 'exploit-db' in cveobj:
-					cveexdbout = '<br><div class="small" style="line-height:20px;"><b>Exploit DB:</b><br>'
-					for cveexdb in cveobj['exploit-db']:
-						if 'title' in cveexdb:
-							cveexdbout += '<a href="'+cveexdb['source']+'">'+html.escape(cveexdb['title'])+'</a><br>'
-					cveexdbout += '</div>'
+				for cveobj in listcve:
+					cverefout = ''
+					for cveref in cveobj['references']:
+						cverefout += '<a href="'+cveref+'">'+cveref+'</a><br>'
 
-				cveout += '<div style="line-height:28px;padding:10px;border-bottom:solid #ccc 1px;margin-top:10px;">'+\
-				'	<span class="label red">'+html.escape(cveobj['id'])+'</span> '+html.escape(cveobj['summary'])+'<br><br>'+\
-				'	<div class="small" style="line-height:20px;"><b>References:</b><br>'+cverefout+'</div>'+\
-				cveexdbout+\
-				'</div>'
+					cveexdbout = ''
+					if 'exploit-db' in cveobj:
+						cveexdbout = '<br><div class="small" style="line-height:20px;"><b>Exploit DB:</b><br>'
+						for cveexdb in cveobj['exploit-db']:
+							if 'title' in cveexdb:
+								cveexdbout += '<a href="'+cveexdb['source']+'">'+html.escape(cveexdb['title'])+'</a><br>'
+						cveexdbout += '</div>'
+
+					cveout += '<div style="line-height:28px;padding:10px;border-bottom:solid #ccc 1px;margin-top:10px;">'+\
+					'	<span class="label red">'+html.escape(cveobj['id'])+'</span> '+html.escape(cveobj['summary'])+'<br><br>'+\
+					'	<div class="small" style="line-height:20px;"><b>References:</b><br>'+cverefout+'</div>'+\
+					cveexdbout+\
+					'</div>'
+				
 
 			r['cvelist'] = cveout
 
@@ -323,13 +338,24 @@ def index(request, filterservice="", filterportid=""):
 			else:
 				viewhref = '#!'
 
+			filename = i
+			if re.search('^webmapsched\_[0-9\.]+',i):
+				m = re.search('^webmapsched\_([0-9\.]+)\_(.+)',i)
+				filename = '<i class="fas fa-calendar-alt grey-text"></i> '+html.escape(m.group(2))
+
 			portstats = nmap_ports_stats(i)
 
 			r['stats']['po'] = (r['stats']['po'] + portstats['po'])
 			r['stats']['pc'] = (r['stats']['pc'] + portstats['pc'])
 			r['stats']['pf'] = (r['stats']['pf'] + portstats['pf'])
 
-			r['tr'][i] = {'filename':html.escape(i), 'startstr': html.escape(o['@startstr']), 'hostnum':hostnum, 'href':viewhref, 'portstats':portstats}
+			r['tr'][i] = {
+				'filename':filename,
+				'startstr': html.escape(o['@startstr']),
+				'hostnum':hostnum,
+				'href':viewhref,
+				'portstats':portstats
+			}
 
 
 		r['stats']['xmlcount'] = xmlfilescount
@@ -422,11 +448,12 @@ def index(request, filterservice="", filterportid=""):
 				else:
 					lastportid = p['@portid']
 
-				if filterservice != "" and p['service']['@name'] == filterservice:
-					striggered = True
+				if 'service' in p:
+					if filterservice != "" and p['service']['@name'] == filterservice:
+						striggered = True
 
-				if filterportid != "" and p['@portid'] == filterportid:
-					striggered = True
+					if filterportid != "" and p['@portid'] == filterportid:
+						striggered = True
 
 				pp[p['@portid']] = p['@portid']
 

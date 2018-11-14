@@ -101,8 +101,8 @@ def visjs(request):
 					#	addnodes += "	addNode('port"+addressmd5+p['@portid']+"', '"+p['@portid']+"', '\uf146', '#666', '#999'); "+\
 					#	"	edges.add({ id: 'edgeport"+addressmd5+p['@portid']+"', from: 'addr"+addressmd5+"', to: 'port"+addressmd5+p['@portid']+"', color:{color: '#cccccc'} }); "
 
-
 					v,z,e = '','',''
+          
 					if 'service' in p:
 						if '@version' in p['service']:
 							portnodes[addressmd5][p['@portid']]['version'] = p['service']['@version']
