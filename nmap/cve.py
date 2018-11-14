@@ -50,10 +50,11 @@ def getcpe(xmlfile):
 				if 'script' in p:
 					if type(p['script']) is list:
 						for scripti in p['script']:
-							if type(scripti['elem']) is list:
-								for elmi in scripti['elem']:
-									if elmi['@key'] == 'cve':
-										cve[address][elmi['#text']] = elmi['#text']
+							if 'elem' in scripti:
+								if type(scripti['elem']) is list:
+									for elmi in scripti['elem']:
+										if elmi['@key'] == 'cve':
+											cve[address][elmi['#text']] = elmi['#text']
 
 		# this fix single host report
 		if type(ik) is not dict:
