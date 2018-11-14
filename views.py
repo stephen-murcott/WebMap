@@ -544,10 +544,18 @@ def index(request, filterservice="", filterportid=""):
 			if scanmd5 in cvehost:
 				if addressmd5 in cvehost[scanmd5]:
 					cvejson = json.loads(cvehost[scanmd5][addressmd5])
-					for cveobj in cvejson:
-						cvecount = (cvecount + 1)
+					for ic in cvejson:
+						if type(ic) is list:
+							listcve = ic
+						elif type(ic) is dict:
+							listcve = [ic]
 
-					cveout = '<a href="#!" class="grey-text"><i class="fas fa-exclamation-triangle"></i> '+str(cvecount)+' CVE found</a>'
+						for cvei in listcve:
+							if 'id' in cvei:
+								cvecount = (cvecount + 1)
+
+					if cvecount > 0:
+						cveout = '<a href="#!" class="grey-text"><i class="fas fa-exclamation-triangle"></i> '+str(cvecount)+' CVE found</a>'
 
 			if (filterservice != "" and striggered is True) or (filterportid != "" and striggered is True) or (filterservice == "" and filterportid == ""):
 				portstateout = '<div style="overflow:none;background-color:#eee;" class="tooltipped" data-position="top" data-tooltip="'+str(po)+' open, '+str(pc)+' closed, '+str(pf)+' filtered">'+\
@@ -587,7 +595,8 @@ def index(request, filterservice="", filterportid=""):
 					'newlabelout': newlabelout,
 					'notesb64': notesb64,
 					'notesout': notesout,
-					'cveout': cveout
+					'cveout': cveout,
+					'cvecount': cvecount
 				}
 
 				hostindex = (hostindex + 1)
