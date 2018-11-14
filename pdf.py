@@ -158,9 +158,10 @@ def reportPDFView(request):
 				elif p['@protocol'] == 'udp':
 					hdhtml_protocolor = 'red'
 
-				servicename = ''
 				if 'service' in p:
 					servicename = p['service']['@name']
+				else:
+					servicename = ''
 				
 				hostdetails_html_tr += '<tr>'+\
 				'	<td><span class="'+hdhtml_protocolor+'-text">'+p['@protocol']+'</span> / <span class=""><b>'+p['@portid']+'</b></span><br><span class="small">'+servicename+'</span></td>'+\

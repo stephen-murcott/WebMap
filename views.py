@@ -455,7 +455,11 @@ def index(request, filterservice="", filterportid=""):
 					if filterportid != "" and p['@portid'] == filterportid:
 						striggered = True
 
+				pp[p['@portid']] = p['@portid']
+
+				if 'service' in p:
 					ss[p['service']['@name']] = p['service']['@name']
+
 					if '@extrainfo' in p['service']:
 						e = p['service']['@extrainfo']
 
@@ -466,13 +470,8 @@ def index(request, filterservice="", filterportid=""):
 								cpe[address][cpei] = cpei
 						else:
 							cpe[address][p['service']['cpe']] = p['service']['cpe']
+		
 
-					pp[p['@portid']] = p['@portid']
-
-
-	
-
-				if 'service' in p:
 					if '@ostype' in p['service']:
 						if p['service']['@ostype'] in allostypelist:
 							allostypelist[p['service']['@ostype']] = (allostypelist[p['service']['@ostype']] +1)
