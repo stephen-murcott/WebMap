@@ -448,13 +448,13 @@ def index(request, filterservice="", filterportid=""):
 				else:
 					lastportid = p['@portid']
 
-				if filterservice != "" and p['service']['@name'] == filterservice:
-					striggered = True
-
-				if filterportid != "" and p['@portid'] == filterportid:
-					striggered = True
-
 				if 'service' in p:
+					if filterservice != "" and p['service']['@name'] == filterservice:
+						striggered = True
+
+					if filterportid != "" and p['@portid'] == filterportid:
+						striggered = True
+
 					ss[p['service']['@name']] = p['service']['@name']
 					if '@extrainfo' in p['service']:
 						e = p['service']['@extrainfo']

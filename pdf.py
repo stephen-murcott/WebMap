@@ -121,16 +121,17 @@ def reportPDFView(request):
 					counters['pf'] = (counters['pf'] + 1)
 					hostcounters['pf'] = (hostcounters['pf'] + 1)
 
-				if '@ostype' in p['service']:
-					if p['service']['@ostype'] in counters['ostype']:
-						counters['ostype'][p['service']['@ostype']] = (counters['ostype'][p['service']['@ostype']] +1)
-					else:
-						counters['ostype'][p['service']['@ostype']] = 1;
+				if 'service' in p:
+					if '@ostype' in p['service']:
+						if p['service']['@ostype'] in counters['ostype']:
+							counters['ostype'][p['service']['@ostype']] = (counters['ostype'][p['service']['@ostype']] +1)
+						else:
+							counters['ostype'][p['service']['@ostype']] = 1;
 
-				if p['service']['@name'] in counters['ss']:
-					counters['ss'][p['service']['@name']] = (counters['ss'][p['service']['@name']] + 1)
-				else:
-					counters['ss'][p['service']['@name']] = 1
+					if p['service']['@name'] in counters['ss']:
+						counters['ss'][p['service']['@name']] = (counters['ss'][p['service']['@name']] + 1)
+					else:
+						counters['ss'][p['service']['@name']] = 1
 
 				if p['@portid'] in counters['pi']:
 					counters['pi'][p['@portid']] = (counters['pi'][p['@portid']] + 1)
@@ -138,25 +139,31 @@ def reportPDFView(request):
 					counters['pi'][p['@portid']] = 1
 
 				hdhtml_product = ''
-				if '@product' in p['service']:
-					hdhtml_product = html.escape(p['service']['@product'])
-				else:
-					hdhtml_product = '<i class="grey-text">No Product</i>'
+				if 'service' in p:
+					if '@product' in p['service']:
+						hdhtml_product = html.escape(p['service']['@product'])
+					else:
+						hdhtml_product = '<i class="grey-text">No Product</i>'
 
 				hdhtml_version = ''
-				if '@version' in p['service']:
-					hdhtml_version = html.escape(p['service']['@version'])
-				else:
-					hdhtml_version = '<i class="grey-text">No Version</i>'
+				if 'service' in p:
+					if '@version' in p['service']:
+						hdhtml_version = html.escape(p['service']['@version'])
+					else:
+						hdhtml_version = '<i class="grey-text">No Version</i>'
 
 				hdhtml_protocolor = 'grey'
 				if p['@protocol'] == 'tcp':
 					hdhtml_protocolor = 'blue'
 				elif p['@protocol'] == 'udp':
 					hdhtml_protocolor = 'red'
+
+				servicename = ''
+				if 'service' in p:
+					servicename = p['service']['@name']
 				
 				hostdetails_html_tr += '<tr>'+\
-				'	<td><span class="'+hdhtml_protocolor+'-text">'+p['@protocol']+'</span> / <span class=""><b>'+p['@portid']+'</b></span><br><span class="small">'+p['service']['@name']+'</span></td>'+\
+				'	<td><span class="'+hdhtml_protocolor+'-text">'+p['@protocol']+'</span> / <span class=""><b>'+p['@portid']+'</b></span><br><span class="small">'+servicename+'</span></td>'+\
 				'	<td>'+hdhtml_stateico+' '+p['state']['@state']+'</td>'+\
 				'	<td>'+hdhtml_product+' / '+hdhtml_version+'</td>'+\
 				'</tr>'
