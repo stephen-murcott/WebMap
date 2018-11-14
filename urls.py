@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, api, pdf, network
+from . import views, api, pdf, network, functions_nmap
 
 urlpatterns = [
 	path('', views.index, name='index'),
@@ -11,6 +11,8 @@ urlpatterns = [
 	path('api/v1/scan/<scanfile>/<faddress>', api.apiv1_hostdetails, name='apiv1_hostdetails'),
 	path('api/v1/scan/<scanfile>', api.apiv1_hostdetails, name='apiv1_hostdetails'),
 	path('api/v1/scan', api.apiv1_scan, name='apiv1_scan'),
+	path('api/v1/nmap/scan/active', functions_nmap.nmap_scaninfo, name='apiv1_scan_active'),
+	path('api/v1/nmap/scan/new', functions_nmap.nmap_newscan, name='apiv1_scan_new'),
 	path('api/setlabel/<objtype>/<label>/<hashstr>/', api.label, name='api_label'),
 	path('api/rmlabel/<objtype>/<hashstr>/', api.rmlabel, name='api_rmlabel'),
 	path('api/pdf/', api.genPDF, name='genPDF'),

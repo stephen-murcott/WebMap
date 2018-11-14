@@ -88,7 +88,13 @@ def details(request, address):
 
 			r['address'] = html.escape(str(saddress))
 			r['hostname'] = hostname
-			r['scanfile'] = request.session['scanfile']
+
+			scantitle = request.session['scanfile'].replace('.xml','').replace('_',' ')
+			if re.search('^webmapsched\_[0-9\.]+', request.session['scanfile']):
+				m = re.search('^webmapsched\_[0-9\.]+\_(.+)', request.session['scanfile'])
+				scantitle = m.group(1).replace('.xml','').replace('_',' ')
+			r['scanfile'] = scantitle
+
 
 			labelout = '<span id="hostlabel"></span>'
 			if scanmd5 in labelhost:
@@ -122,8 +128,9 @@ def details(request, address):
 
 				pel = (pel + 1)
 				oshtml = ''
-				if '@ostype' in p['service']:
-					oshtml = '<div style="font-family:monospace;padding:6px;margin:6px;border-left:solid #666 1px;"><sup style="border-bottom:solid #ccc 1px;">Operating System</sup><br>'+html.escape(p['service']['@ostype'])+'</div>'
+				if 'service' in p:
+					if '@ostype' in p['service']:
+						oshtml = '<div style="font-family:monospace;padding:6px;margin:6px;border-left:solid #666 1px;"><sup style="border-bottom:solid #ccc 1px;">Operating System</sup><br>'+html.escape(p['service']['@ostype'])+'</div>'
 
 				so = ''
 				if 'script' in p:
@@ -155,9 +162,9 @@ def details(request, address):
 					if 'cpe' in p['service']:
 						if type(p['service']['cpe']) is list:
 							for cpei in p['service']['cpe']:
-								cpe += '<span class="grey-text" style="font-family:monospace;font-size:12px;">'+html.escape(cpei)+'</span><br>'
+								cpe += '<div class="grey-text" style="font-family:monospace;font-size:12px;">'+html.escape(cpei)+'</div>'
 						else:
-								cpe = '<span class="grey-text" style="font-family:monospace;font-size:12px;">'+html.escape(p['service']['cpe'])+'</span><br>'
+								cpe = '<div class="grey-text" style="font-family:monospace;font-size:12px;">'+html.escape(p['service']['cpe'])+'</div>'
 							
 					r['tr'][p['@portid']] = {
 						'service': p['service']['@name'],
@@ -165,6 +172,7 @@ def details(request, address):
 						'portid': p['@portid'],
 						'product': z,
 						'version': v,
+						'cpe':cpe,
 						'state': p['state']['@state'],
 						'reason': p['state']['@reason'],
 						'extrainfo': e,
@@ -185,8 +193,13 @@ def details(request, address):
 					'<button onclick="javascript:apiPortDetails(\''+html.escape(address)+'\',\''+html.escape(p['@portid'])+'\');" class="btn blue right"><i class="material-icons">receipt</i></button></td>'+\
 					'</tr>'
 				elif p['state']['@state'] == 'filtered':
+					if 'service' in p:
+						servicename = p['service']['@name']
+					else:
+						servicename = ''
+
 					r['tr'][p['@portid']] = {
-						'service': p['service']['@name'],
+						'service': servicename,
 						'protocol': p['@protocol'],
 						'portid': p['@portid'],
 						'state': p['state']['@state'],
@@ -194,7 +207,7 @@ def details(request, address):
 						'pel': str(pel)
 					}
 					r['trhost'] += '<tr><td><span class="new badge grey" data-badge-caption="">'+p['@protocol']+' / '+p['@portid']+'</span><br>'+\
-					'<span style="color:#999;font-size:12px;">'+p['service']['@name']+'</span></td>'+\
+					'<span style="color:#999;font-size:12px;">'+servicename+'</span></td>'+\
 					'<td colspan="2" style="color:#999;font-size:12px;">State: filtered<br>Reason: '+p['state']['@reason']+'</td>'+\
 					'<td><button onclick="javascript:apiPortDetails(\''+html.escape(address)+'\',\''+html.escape(p['@portid'])+'\');" class="btn blue right"><i class="material-icons">receipt</i></button></td></tr>'
 				else:
@@ -230,28 +243,36 @@ def details(request, address):
 	cveout = ''
 	if scanmd5 in cvehost:
 		if addressmd5 in cvehost[scanmd5]:
-			#for cveport in cvehost[scanmd5][addressmd5]:
 			cvejson = json.loads(cvehost[scanmd5][addressmd5])
-			# r['out'] = json.dumps(cvejson, indent=4)
-			for cveobj in cvejson:
 
-				cverefout = ''
-				for cveref in cveobj['references']:
-					cverefout += '<a href="'+cveref+'">'+cveref+'</a><br>'
+			for i in cvejson:
+				if type(i) is list:
+					listcve = i
+					#cveout += 'list<hr>'
+				elif type(i) is dict:
+					listcve = [i]
+					#cveout += 'dict<hr>'
+				#continue
 
-				cveexdbout = ''
-				if 'exploit-db' in cveobj:
-					cveexdbout = '<br><div class="small" style="line-height:20px;"><b>Exploit DB:</b><br>'
-					for cveexdb in cveobj['exploit-db']:
-						if 'title' in cveexdb:
-							cveexdbout += '<a href="'+cveexdb['source']+'">'+html.escape(cveexdb['title'])+'</a><br>'
-					cveexdbout += '</div>'
+				for cveobj in listcve:
+					cverefout = ''
+					for cveref in cveobj['references']:
+						cverefout += '<a href="'+cveref+'">'+cveref+'</a><br>'
 
-				cveout += '<div style="line-height:28px;padding:10px;border-bottom:solid #ccc 1px;margin-top:10px;">'+\
-				'	<span class="label red">'+html.escape(cveobj['id'])+'</span> '+html.escape(cveobj['summary'])+'<br><br>'+\
-				'	<div class="small" style="line-height:20px;"><b>References:</b><br>'+cverefout+'</div>'+\
-				cveexdbout+\
-				'</div>'
+					cveexdbout = ''
+					if 'exploit-db' in cveobj:
+						cveexdbout = '<br><div class="small" style="line-height:20px;"><b>Exploit DB:</b><br>'
+						for cveexdb in cveobj['exploit-db']:
+							if 'title' in cveexdb:
+								cveexdbout += '<a href="'+cveexdb['source']+'">'+html.escape(cveexdb['title'])+'</a><br>'
+						cveexdbout += '</div>'
+
+					cveout += '<div style="line-height:28px;padding:10px;border-bottom:solid #ccc 1px;margin-top:10px;">'+\
+					'	<span class="label red">'+html.escape(cveobj['id'])+'</span> '+html.escape(cveobj['summary'])+'<br><br>'+\
+					'	<div class="small" style="line-height:20px;"><b>References:</b><br>'+cverefout+'</div>'+\
+					cveexdbout+\
+					'</div>'
+				
 
 			r['cvelist'] = cveout
 
@@ -317,13 +338,24 @@ def index(request, filterservice="", filterportid=""):
 			else:
 				viewhref = '#!'
 
+			filename = i
+			if re.search('^webmapsched\_[0-9\.]+',i):
+				m = re.search('^webmapsched\_([0-9\.]+)\_(.+)',i)
+				filename = '<i class="fas fa-calendar-alt grey-text"></i> '+html.escape(m.group(2))
+
 			portstats = nmap_ports_stats(i)
 
 			r['stats']['po'] = (r['stats']['po'] + portstats['po'])
 			r['stats']['pc'] = (r['stats']['pc'] + portstats['pc'])
 			r['stats']['pf'] = (r['stats']['pf'] + portstats['pf'])
 
-			r['tr'][i] = {'filename':html.escape(i), 'startstr': html.escape(o['@startstr']), 'hostnum':hostnum, 'href':viewhref, 'portstats':portstats}
+			r['tr'][i] = {
+				'filename':filename,
+				'startstr': html.escape(o['@startstr']),
+				'hostnum':hostnum,
+				'href':viewhref,
+				'portstats':portstats
+			}
 
 
 		r['stats']['xmlcount'] = xmlfilescount
@@ -422,33 +454,37 @@ def index(request, filterservice="", filterportid=""):
 				if filterportid != "" and p['@portid'] == filterportid:
 					striggered = True
 
-				ss[p['service']['@name']] = p['service']['@name']
-				pp[p['@portid']] = p['@portid']
+				if 'service' in p:
+					ss[p['service']['@name']] = p['service']['@name']
+					if '@extrainfo' in p['service']:
+						e = p['service']['@extrainfo']
 
-				if '@extrainfo' in p['service']:
-					e = p['service']['@extrainfo']
+					# cpehtml = ''
+					if 'cpe' in p['service']:
+						if type(p['service']['cpe']) is list:
+							for cpei in p['service']['cpe']:
+								cpe[address][cpei] = cpei
+						else:
+							cpe[address][p['service']['cpe']] = p['service']['cpe']
 
-				# cpehtml = ''
-				if 'cpe' in p['service']:
-					if type(p['service']['cpe']) is list:
-						for cpei in p['service']['cpe']:
-							cpe[address][cpei] = cpei
+					pp[p['@portid']] = p['@portid']
+
+
+	
+
+				if 'service' in p:
+					if '@ostype' in p['service']:
+						if p['service']['@ostype'] in allostypelist:
+							allostypelist[p['service']['@ostype']] = (allostypelist[p['service']['@ostype']] +1)
+						else:
+							allostypelist[p['service']['@ostype']] = 1;
+
+						ost[p['service']['@ostype']] = p['service']['@ostype']
+
+					if p['service']['@name'] in sscount:
+						sscount[p['service']['@name']] = (sscount[p['service']['@name']] + 1)
 					else:
-						cpe[address][p['service']['cpe']] = p['service']['cpe']
-		
-
-				if '@ostype' in p['service']:
-					if p['service']['@ostype'] in allostypelist:
-						allostypelist[p['service']['@ostype']] = (allostypelist[p['service']['@ostype']] +1)
-					else:
-						allostypelist[p['service']['@ostype']] = 1;
-
-					ost[p['service']['@ostype']] = p['service']['@ostype']
-
-				if p['service']['@name'] in sscount:
-					sscount[p['service']['@name']] = (sscount[p['service']['@name']] + 1)
-				else:
-					sscount[p['service']['@name']] = 1
+						sscount[p['service']['@name']] = 1
 
 				if p['@portid'] in picount:
 					picount[p['@portid']] = (picount[p['@portid']] + 1)

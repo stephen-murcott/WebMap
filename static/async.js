@@ -1,6 +1,96 @@
+var active_scan_timer;
 $(document).ready(function() {
 	// doc ready
+
+	active_scan_timer = setInterval(function() { checkActiveScan(); }, 2000);
+	$('select').formSelect();
 });
+
+function checkActiveScan() {
+	$.get('/api/v1/nmap/scan/active').done(function(d) {
+		console.log(d);
+		$('#activescan').html('');
+		var c = 0;
+		for(i in d['scans']) {
+			c = (c + 1);
+			if(d['scans'][i]['status'] == 'active') {
+				$('#activescancard').css('display','block');
+				$('#activescan').append(
+					'<div class="row" style="border-bottom:solid #ccc 0px;padding:6px;">'+
+					'<div class="col s1" style="max-width:50px;"><div class="black grey-text small" style="font-family:monospace;border-radius:4px;padding-left:4px;padding-right:4px;width:20px;text-align:center;">'+c+'</div></div>'+
+					'<div class="col s3"><b>Filename:</b><br>'+i+'</div>'+
+					'<div class="col s4 small">Start at: '+d['scans'][i]['startstr']+'<br>Type: '+d['scans'][i]['type']+', Protocol: '+d['scans'][i]['protocol']+'</div>'+
+					'<div class="col s4"><div class="progress"><div class="indeterminate"></div></div></div>'+
+					'</div>'
+				);
+			} else {
+				$('#activescancard').css('display','block');
+				$('#activescan').append(
+					'<div class="row" style="border-bottom:solid #ccc 0px;padding:6px;">'+
+					'<div class="col s3"><b>Filename:</b><br>'+i+'</div>'+
+					'<div class="col s3 small">Start at: '+d['scans'][i]['startstr']+'<br>Type: '+d['scans'][i]['type']+', Protocol: '+d['scans'][i]['protocol']+'</div>'+
+					'<div class="col s4 small">'+d['scans'][i]['summary']+'</div>'+
+					'<div class="col s2"><a href="#!" onclick="javascript:location.reload();" class="wbtn-small blue right">reload</a></div>'+
+					'</div>'
+				);
+			}
+		}
+
+		if(c <= 0) {
+			$('#activescancard').css('display','none');
+		}
+	});
+}
+
+function newscan() {
+	$('#modaltitle').html('<i class="material-icons">wifi_tethering</i> New Nmap Scan');
+	$('#modalbody').html(
+		'Run a new Nmap scan by setting the following 3 parameters:'+
+		'<div class="input-field">'+
+		'	<div class="small">'+
+		'		<div style="padding:20px;">'+
+		'		<b>Filename:</b><br>Name of the Nmap XML file. This name must has the <code class="language-markup">.xml</code> extension.<br>Allowed chars: <code>[a-zA-Z0-9], _, - and .</code><br><br>'+
+		'		<b>Target:</b><br>This could be the target IP address or hostname<br><br>'+
+		'		<b>Parameters:</b><br>Nmap parameters, more information at <a href="https://nmap.org/book/man-briefoptions.html">https://nmap.org/book/man-briefoptions.html</a>'+
+		'		<div>'+
+		'	</div>'+
+		'<br>'+
+		'	<input placeholder="XML Filename (ex. my_scan.xml)" id="xmlfilename" type="text" class="validate">'+
+		'	<input placeholder="Target IP or hostname (ex. 192.168.1.0/24)" id="targethost" type="text" class="validate">'+
+		'	<input placeholder="Nmap Parameters (ex. -sT -A -T4)" id="params" type="text" class="validate">'+
+		'	<br><br>'+
+		'	<div class="row">'+
+		'		<div class="col s6"><b>Schedule:</b></div><div class="col s6"><b>Frequency:</b></div>'+
+		'		<div class="col s6"><br><br><div class="switch"><label>Off<input id="schedule" name="schedule" type="checkbox"><span class="lever"></span>On</label></div></div>'+
+		'		<div class="col s6 input-field"><select id="frequency" name="frequency">'+
+		'			<option value="1h">Hourly</option>'+
+		'			<option value="1d">Daily</option>'+
+		'			<option value="1w">Weekly</option>'+
+		'			<option value="1m">Monthly</option>'+
+		'		</select></div>'+
+		'	</div>'+
+		'</div>'+
+		''
+	);
+	$('#modalfooter').html('<button onclick="javascript:startscan();" class="btn green">Start</button>');
+	$('#modal1').modal('open');
+	$('select').formSelect();
+}
+
+function startscan() {
+	$('#modal1').modal('close');
+	csrftoken = $('input[name="csrfmiddlewaretoken"]').val();
+	$.post('/api/v1/nmap/scan/new', {
+		'csrfmiddlewaretoken': csrftoken,
+		'filename': $('#xmlfilename').val(),
+		'target': $('#targethost').val(),
+		'params': $('#params').val(),
+		'schedule': $('#schedule').prop('checked'),
+		'frequency': $('#frequency').val(),
+	}).done(function(d) {
+		console.log(d);
+	});
+}
 
 var cpetot = 0;
 var cpetimer;

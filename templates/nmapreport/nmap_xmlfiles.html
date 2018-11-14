@@ -50,7 +50,7 @@
 			<tbody>
 				{% for i,v in tr.items %}
 					<tr>
-						<td><b><a href="{{ v.href }}">{{ v.filename }}</a></b></td>
+						<td><b><a href="{{ v.href }}">{{ v.filename|safe }}</a></b></td>
 						<td class="hide-on-small-only"><code>{{ v.startstr }}</code></td>
 						<td class="hide-on-small-only">{{ v.hostnum }}</td>
 						<td>
@@ -64,6 +64,17 @@
 			</tbody>
 		</table>
 		</div>
+		<div class="card-action">
+			<a href="#!" onclick="javascript:newscan();" class="valign-wrapper"><i class="material-icons">wifi_tethering</i> &nbsp; New Nmap Scan</a>
+		</div>
+		</div>
+
+		<div class="card" id="activescancard" style="display:none;">
+			<div class="card-content">
+				<b>Active Scan</b><br><br>
+				<div id="activescan">
+				</div>
+			</div>
 		</div>
 
 		<br><br>
