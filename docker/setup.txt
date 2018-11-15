@@ -21,6 +21,7 @@ docker run -d --name webmap -h webmap -p 8000:8000 -v /tmp/webmap:/opt/xml rev3r
 echo "[+] Configure TimeZone for container"
 docker exec -ti webmap bash /root/tzdata.sh
 echo "[+] Restart container"
+docker restart webmap
 echo "[+] Done"
 echo -e "\nNow you can point your browser to http://localhost:8000"
 echo "Please, take few seconds to support this project on GitHub"
