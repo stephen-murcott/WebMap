@@ -20,7 +20,7 @@ for i in schedfiles:
 		nextrun = (sched['lastrun'] + gethours(sched['params']['frequency']))
 		if nextrun <= time.time():
 			sched['number'] = (sched['number']+1)
-			print("run job "+str(sched['number'])+" "+str(nextrun)+" / "+str(time.time()))
+			print("[RUN]   scan:"+sched['params']['filename']+" id:"+str(sched['number'])+" (nextrun:"+str(nextrun)+" / now:"+str(time.time())+")")
 
 			sched['lastrun'] = time.time()
 
@@ -33,5 +33,5 @@ for i in schedfiles:
 
 			time.sleep(10)
 		else:
-			print("none "+str(nextrun)+" / "+str(time.time()))
+			print("[SKIP]  scan:"+sched['params']['filename']+" id:"+str(sched['number'])+" (nextrun:"+str(nextrun)+" / now:"+str(time.time())+")")
 

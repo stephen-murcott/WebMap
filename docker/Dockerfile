@@ -37,9 +37,10 @@ COPY settings.py /opt/nmapdashboard/nmapdashboard/
 COPY urls.py /opt/nmapdashboard/nmapdashboard/
 COPY vimrc /root/.vimrc
 COPY tzdata.sh /root/tzdata.sh
+COPY startup.sh /startup.sh
 
 RUN cd /opt/nmapdashboard && python3 manage.py migrate
 
 EXPOSE 8000
 
-ENTRYPOINT ["python3", "/opt/nmapdashboard/manage.py", "runserver", "0:8000"]
+ENTRYPOINT ["bash", "/startup.sh"]
