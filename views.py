@@ -319,7 +319,7 @@ def index(request, filterservice="", filterportid=""):
 			try:
 				oo = xmltodict.parse(open('/opt/xml/'+i, 'r').read())
 			except:
-				r['tr'][i] = {'filename':html.escape(i), 'startstr': 'Incomplete / Invalid', 'hostnum':0, 'href':'#!', 'portstats':{'po':0,'pc':0,'pf':0}}
+				r['tr'][i] = {'filename':html.escape(i), 'start': 0, 'startstr': 'Incomplete / Invalid', 'hostnum':0, 'href':'#!', 'portstats':{'po':0,'pc':0,'pf':0}}
 				continue
 
 			r['out2'] = json.dumps(oo['nmaprun'], indent=4)
@@ -349,15 +349,16 @@ def index(request, filterservice="", filterportid=""):
 			r['stats']['pc'] = (r['stats']['pc'] + portstats['pc'])
 			r['stats']['pf'] = (r['stats']['pf'] + portstats['pf'])
 
-			r['tr'][i] = {
+			r['tr'][o['@start']] = {
 				'filename':filename,
+				'start': o['@start'],
 				'startstr': html.escape(o['@startstr']),
 				'hostnum':hostnum,
 				'href':viewhref,
 				'portstats':portstats
 			}
 
-
+		r['tr'] = OrderedDict(sorted(r['tr'].items()))
 		r['stats']['xmlcount'] = xmlfilescount
 
 		return render(request, 'nmapreport/nmap_xmlfiles.html', r)
