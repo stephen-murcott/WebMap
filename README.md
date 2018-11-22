@@ -65,11 +65,16 @@ but if you need it you can find all building steps inside the [Dockerfile](https
 ## Video
 The HTML template changes often. This video could not be up to date with the latest version.
 
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/TujtG1Ki0TQ/0.jpg)](https://www.youtube.com/watch?v=TujtG1Ki0TQ)
+HackerSploit Video about WebMap:<br>
+[![HackerSploit](https://img.youtube.com/vi/SoEIDNnOCGY/0.jpg)](https://www.youtube.com/watch?v=SoEIDNnOCGY)
+<br>
+Official Video of v2.1:<br>
+[![WebMap v2.1](https://img.youtube.com/vi/TujtG1Ki0TQ/0.jpg)](https://www.youtube.com/watch?v=TujtG1Ki0TQ)
 
 
 ## Features
 - Import and parse Nmap XML files
+- Run and Schedule Nmap Scan from dashboard
 - Statistics and Charts on discovered services, ports, OS, etc...
 - Inspect a single host by clicking on its IP address
 - Attach labels on a host
@@ -78,6 +83,21 @@ The HTML template changes often. This video could not be up to date with the lat
 - Copy to clipboard as Nikto, Curl or Telnet commands
 - Search for CVE and Exploits based on CPE collected by Nmap
 - RESTful API
+
+## Roadmap for v2.3x
+You love WebMap and you know python? We need your help! This is what we want deploy for the v2.3:
+- [todo] Improve template: try to define better the html template and charts
+- [todo] Improve API: create a documentation/wiki about it
+- [todo] Wiki: create WebMap User Guide on GitHub
+- [todo] Authentication or something that could blocks access to WebMap if != localhost
+- [working] Scan diff: show difference between two scheduled nmap scan report
+- [todo] Zaproxy: Perform web scan using the OWASP ZAP API
+
+## Changes on v2.2
+- fixed bug on missing services
+- Run nmap from WebMap
+- Schedule nmap run
+- Add custom NSE scripts section
 
 ## Changes on v2.1
 - Better usage of Django template
@@ -264,10 +284,6 @@ informations about your port scan. Please, be smart.
 ## Contributors
 This project is currently a beta, and I'm not super skilled on Django so, every type of contribution is appreciated. 
 I'll mention all contributors in this section of the README file.
-
-### Contributors List
-- s3th_0x [@adubaldo](https://github.com/adubaldo) (bug on single host report)
-- Neetx [@Neetx](https://github.com/Neetx) (bug on xml with no host up)
 
 ## Contacts
 In order to receive updates about this project, please follow me on twitter:<br>

@@ -319,7 +319,7 @@ def index(request, filterservice="", filterportid=""):
 			try:
 				oo = xmltodict.parse(open('/opt/xml/'+i, 'r').read())
 			except:
-				r['tr'][i] = {'filename':html.escape(i), 'startstr': 'Incomplete / Invalid', 'hostnum':0, 'href':'#!', 'portstats':{'po':0,'pc':0,'pf':0}}
+				r['tr'][i] = {'filename':html.escape(i), 'start': 0, 'startstr': 'Incomplete / Invalid', 'hostnum':0, 'href':'#!', 'portstats':{'po':0,'pc':0,'pf':0}}
 				continue
 
 			r['out2'] = json.dumps(oo['nmaprun'], indent=4)
@@ -349,15 +349,16 @@ def index(request, filterservice="", filterportid=""):
 			r['stats']['pc'] = (r['stats']['pc'] + portstats['pc'])
 			r['stats']['pf'] = (r['stats']['pf'] + portstats['pf'])
 
-			r['tr'][i] = {
+			r['tr'][o['@start']] = {
 				'filename':filename,
+				'start': o['@start'],
 				'startstr': html.escape(o['@startstr']),
 				'hostnum':hostnum,
 				'href':viewhref,
 				'portstats':portstats
 			}
 
-
+		r['tr'] = OrderedDict(sorted(r['tr'].items()))
 		r['stats']['xmlcount'] = xmlfilescount
 
 		return render(request, 'nmapreport/nmap_xmlfiles.html', r)
@@ -555,7 +556,7 @@ def index(request, filterservice="", filterportid=""):
 								cvecount = (cvecount + 1)
 
 					if cvecount > 0:
-						cveout = '<a href="#!" class="grey-text"><i class="fas fa-exclamation-triangle"></i> '+str(cvecount)+' CVE found</a>'
+						cveout = '<a href="/report/'+address+'" class="grey-text"><i class="fas fa-exclamation-triangle"></i> '+str(cvecount)+' CVE found</a>'
 
 			if (filterservice != "" and striggered is True) or (filterportid != "" and striggered is True) or (filterservice == "" and filterportid == ""):
 				portstateout = '<div style="overflow:none;background-color:#eee;" class="tooltipped" data-position="top" data-tooltip="'+str(po)+' open, '+str(pc)+' closed, '+str(pf)+' filtered">'+\
@@ -722,6 +723,20 @@ def index(request, filterservice="", filterportid=""):
 	r['cpestring'] = ' <input type="hidden" id="cpestring" value="'+urllib.parse.quote_plus(base64.b64encode(json.dumps(cpedict).encode()))+'" /> '
 
 	return render(request, 'nmapreport/nmap_hostdetails.html', r)
+
+def scan_diff(request, f1, f2):
+	r = {}
+
+	try:
+		if xmltodict.parse(open('/opt/xml/'+f1, 'r').read()) is not None:
+			r['f1'] = f1
+		if xmltodict.parse(open('/opt/xml/'+f2, 'r').read()) is not None:
+			r['f2'] = f2
+	except:
+		r['f1'] = ''
+		r['f2'] = ''
+
+	return render(request, 'nmapreport/nmap_ndiff.html', r)
 
 def about(request):
 	r = {}
