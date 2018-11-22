@@ -17,7 +17,7 @@ function checkActiveScan() {
 				$('#activescancard').css('display','block');
 				$('#activescan').append(
 					'<div class="row" style="border-bottom:solid #ccc 0px;padding:6px;">'+
-					'<div class="col s1" style="max-width:50px;"><div class="black grey-text small" style="font-family:monospace;border-radius:4px;padding-left:4px;padding-right:4px;width:20px;text-align:center;">'+c+'</div></div>'+
+					'<div class="col s1" style="max-width:50px;"><div class="grey white-text small" style="font-family:monospace;border-radius:4px;padding-left:4px;padding-right:4px;width:20px;text-align:center;">'+c+'</div></div>'+
 					'<div class="col s3"><b>Filename:</b><br>'+i+'</div>'+
 					'<div class="col s4 small">Start at: '+d['scans'][i]['startstr']+'<br>Type: '+d['scans'][i]['type']+', Protocol: '+d['scans'][i]['protocol']+'</div>'+
 					'<div class="col s4"><div class="progress"><div class="indeterminate"></div></div></div>'+
@@ -33,6 +33,8 @@ function checkActiveScan() {
 					'<div class="col s2"><a href="#!" onclick="javascript:location.reload();" class="wbtn-small blue right">reload</a></div>'+
 					'</div>'
 				);
+
+				setTimeout(function() { location.reload(); }, 5000);
 			}
 		}
 

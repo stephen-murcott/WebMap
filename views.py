@@ -556,7 +556,7 @@ def index(request, filterservice="", filterportid=""):
 								cvecount = (cvecount + 1)
 
 					if cvecount > 0:
-						cveout = '<a href="#!" class="grey-text"><i class="fas fa-exclamation-triangle"></i> '+str(cvecount)+' CVE found</a>'
+						cveout = '<a href="/report/'+address+'" class="grey-text"><i class="fas fa-exclamation-triangle"></i> '+str(cvecount)+' CVE found</a>'
 
 			if (filterservice != "" and striggered is True) or (filterportid != "" and striggered is True) or (filterservice == "" and filterportid == ""):
 				portstateout = '<div style="overflow:none;background-color:#eee;" class="tooltipped" data-position="top" data-tooltip="'+str(po)+' open, '+str(pc)+' closed, '+str(pf)+' filtered">'+\
@@ -723,6 +723,20 @@ def index(request, filterservice="", filterportid=""):
 	r['cpestring'] = ' <input type="hidden" id="cpestring" value="'+urllib.parse.quote_plus(base64.b64encode(json.dumps(cpedict).encode()))+'" /> '
 
 	return render(request, 'nmapreport/nmap_hostdetails.html', r)
+
+def scan_diff(request, f1, f2):
+	r = {}
+
+	try:
+		if xmltodict.parse(open('/opt/xml/'+f1, 'r').read()) is not None:
+			r['f1'] = f1
+		if xmltodict.parse(open('/opt/xml/'+f2, 'r').read()) is not None:
+			r['f2'] = f2
+	except:
+		r['f1'] = ''
+		r['f2'] = ''
+
+	return render(request, 'nmapreport/nmap_ndiff.html', r)
 
 def about(request):
 	r = {}

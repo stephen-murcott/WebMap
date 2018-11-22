@@ -259,29 +259,28 @@ def apiv1_hostdetails(request, scanfile, faddress=""):
 					else:
 						lastportid = p['@portid']
 
-					ss[p['service']['@name']] = p['service']['@name']
+					v,z,e='','',''
 					pp[p['@portid']] = p['@portid']
 
-					v,z,e='','',''
-					if '@version' in p['service']:
-						v = p['service']['@version']
-					#else:
-					#	v = 'no-version'
+					servicename = ''
+					if 'service' in p:
+						ss[p['service']['@name']] = p['service']['@name']
 
-					if '@product' in p['service']:
-						z = p['service']['@product']
-					#else:
-					#	z = 'no-product'
+						if '@version' in p['service']:
+							v = p['service']['@version']
 
-					if '@extrainfo' in p['service']:
-						e = p['service']['@extrainfo']
-					#else:
-					#	e = 'no-info'
+						if '@product' in p['service']:
+							z = p['service']['@product']
+
+						if '@extrainfo' in p['service']:
+							e = p['service']['@extrainfo']
+
+						servicename = p['service']['@name']
 
 					if faddress != "":
 						r['hosts'][address]['ports'].append({
 							    'port': p['@portid'],
-							    'name': p['service']['@name'],
+							    'name': servicename,
 							   'state': p['state']['@state'],
 							'protocol': p['@protocol'],
 							  'reason': p['state']['@reason'],
