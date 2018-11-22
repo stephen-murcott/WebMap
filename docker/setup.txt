@@ -24,5 +24,6 @@ echo "[+] Restart container"
 docker restart webmap
 echo "[+] Done"
 echo -e "\nNow you can point your browser to http://localhost:8000"
+echo "!! DO NOT EXPOSE WebMap TO THE INTERNET, BE SMART !!"
 echo "Please, take few seconds to support this project on GitHub"
 echo -e "https://github.com/Rev3rseSecurity/WebMap\n"
