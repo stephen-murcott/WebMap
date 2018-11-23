@@ -211,8 +211,13 @@ def details(request, address):
 					'<td colspan="2" style="color:#999;font-size:12px;">State: filtered<br>Reason: '+p['state']['@reason']+'</td>'+\
 					'<td><button onclick="javascript:apiPortDetails(\''+html.escape(address)+'\',\''+html.escape(p['@portid'])+'\');" class="btn blue right"><i class="material-icons">receipt</i></button></td></tr>'
 				else:
+					if 'service' in p:
+						servicename = p['service']['@name']
+					else:
+						servicename = ''
+
 					r['tr'][p['@portid']] = {
-						'service': p['service']['@name'],
+						'service': servicename,
 						'protocol': p['@protocol'],
 						'portid': p['@portid'],
 						'state': p['state']['@state'],
