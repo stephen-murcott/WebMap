@@ -225,7 +225,7 @@ def details(request, address):
 						'pel': str(pel)
 					}
 					r['trhost'] += '<tr><td><span class="new badge grey" data-badge-caption="">'+p['@protocol']+' / '+p['@portid']+'</span><br>'+\
-					'<span style="color:#999;font-size:12px;">'+p['service']['@name']+'</span></td>'+\
+					'<span style="color:#999;font-size:12px;">'+servicename+'</span></td>'+\
 					'<td colspan="2" style="color:#999;font-size:12px;">State: '+p['state']['@state']+'<br>Reason: '+p['state']['@reason']+'</td>'+\
 					'<td><button onclick="javascript:apiPortDetails(\''+html.escape(address)+'\',\''+html.escape(p['@portid'])+'\');" class="btn blue right"><i class="material-icons">receipt</i></button></td></tr>'
 
