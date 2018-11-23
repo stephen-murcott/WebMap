@@ -145,29 +145,34 @@ def details(request, address):
 
 				v,z,e = '','','<i class="grey-text">N/A</i>'
 				if p['state']['@state'] == 'open':
-					if '@version' in p['service']:
-						v = p['service']['@version']
-					else:
-						v = '<i class="grey-text">No Version</i>'
-
-					if '@product' in p['service']:
-						z = p['service']['@product']
-					else:
-						z = '<i class="grey-text">No Product</i>'
-
-					if '@extrainfo' in p['service']:
-						e = p['service']['@extrainfo']
-
-					cpe = ''
-					if 'cpe' in p['service']:
-						if type(p['service']['cpe']) is list:
-							for cpei in p['service']['cpe']:
-								cpe += '<div class="grey-text" style="font-family:monospace;font-size:12px;">'+html.escape(cpei)+'</div>'
+					if 'service' in p:
+						if '@version' in p['service']:
+							v = p['service']['@version']
 						else:
-								cpe = '<div class="grey-text" style="font-family:monospace;font-size:12px;">'+html.escape(p['service']['cpe'])+'</div>'
+							v = '<i class="grey-text">No Version</i>'
+
+						if '@product' in p['service']:
+							z = p['service']['@product']
+						else:
+							z = '<i class="grey-text">No Product</i>'
+
+						if '@extrainfo' in p['service']:
+							e = p['service']['@extrainfo']
+
+						cpe = ''
+						if 'cpe' in p['service']:
+							if type(p['service']['cpe']) is list:
+								for cpei in p['service']['cpe']:
+									cpe += '<div class="grey-text" style="font-family:monospace;font-size:12px;">'+html.escape(cpei)+'</div>'
+							else:
+									cpe = '<div class="grey-text" style="font-family:monospace;font-size:12px;">'+html.escape(p['service']['cpe'])+'</div>'
+
+						servicename = p['service']['@name']
+					else:
+						servicename = ''
 							
 					r['tr'][p['@portid']] = {
-						'service': p['service']['@name'],
+						'service': servicename,
 						'protocol': p['@protocol'],
 						'portid': p['@portid'],
 						'product': z,
@@ -180,7 +185,7 @@ def details(request, address):
 					}
 
 					r['trhost'] += '<tr><td style="vertical-align:top;">'+\
-					'<span style="color:#999;font-size:12px;">'+p['service']['@name']+'</span><br>'+\
+					'<span style="color:#999;font-size:12px;">'+servicename+'</span><br>'+\
 					'<span class="new badge blue" data-badge-caption="">'+p['@protocol']+' / '+p['@portid']+'</span>'+\
 					'</td>'+\
 					'<td>'+z+' / '+v+'<br><span style="font-size:12px;color:#999;">State: '+p['state']['@state']+'<br>Reason: '+p['state']['@reason']+'</span></td>'+\
