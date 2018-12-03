@@ -15,6 +15,7 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis-network.min.js"></script>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis-network.min.css" />
 
+	<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
 	<script src="{% static "/async.js" %}"></script>
 	<style>
@@ -95,6 +96,64 @@
 			background-color:#eee;
 			width:24px;
 		}
+		.wm_menu {
+			width:44px;
+			position:fixed;
+			left:6px;
+			top:80px;
+			background-color:rgba(0,0,0,0.8);
+			padding-left:10px;
+			padding-right:10px;
+			z-index:9999;
+			border-radius: 4px;
+			overflow-y:hidden;
+		}
+
+		.material-icons{
+			display: inline-flex;
+			vertical-align: top;
+		}
+
+		.wm_menu li {
+			height:28px;
+			margin-bottom:10px;
+			line-height:24px;
+			font-size:14px;
+		}
+
+		.wm_line { border-bottom:solid #666 1px; height:1px; line-height:10px; margin-bottom:-10px;padding:0px;}
+		.wm_line div {
+			margin-top:-12px;
+			font-size:8px;
+			color:#999;
+			text-align:center;
+			text-transform:uppercase;
+		}
+
+		.wm_menu i {
+			color:#eee;
+			width:20px;
+			text-align:center;
+			cursor: pointer;
+		}
+
+		.wm_menu a {
+			color:#ccc;
+			margin-left:10px;
+			display:none;
+		}
+
+		.arrow-up {
+			position:fixed;
+			left:18px;
+			top:80px;
+			width: 0; 
+			height: 0; 
+			border-left: 10px solid transparent;
+			border-right: 10px solid transparent;
+			border-bottom: 10px solid rgba(0,0,0,0.8);
+			margin-top:-10px;
+		}
 	</style>
 </head>
 
@@ -103,11 +162,18 @@
 <div class="navbar-fixed">
 <nav class="" style="background-color:rgba(10,10,10,0.9);">
 	<div class="nav-wrapper">
+		{% if scanfile and address %}
 		<div class="col s5 right hide-on-med-and-down" style="margin-right:20px;">
 			<a href="/" class="breadcrumb">{{ scanfile }}</a> <a href="/report/{{ address }}/" class="breadcrumb">{{ address }}</a>
 		</div>
+		{% endif %}
+		{% if scanfile and not address %}
+		<div class="col s5 right hide-on-med-and-down" style="margin-right:20px;">
+			<a href="/" class="breadcrumb">{{ scanfile }}</a> 
+		</div>
+		{% endif %}
 		<div class="row">
-			<div class="col s1" style="max-width:60px;">
+			<div class="col s1 hide-on-large-only" style="max-width:60px;">
 				<a href="#!" onclick="javascript:$('.sidenav').sidenav('open');"><i class="material-icons white-text">menu</i></a>
 			</div>
 			<div class="col s4">
@@ -117,6 +183,35 @@
 
 	</div>
 </nav>
+</div>
+
+<div class="arrow-up hide-on-med-and-down"></div>
+<div class="wm_menu grey-text hide-on-med-and-down show-on-large">
+	<ul>
+		<li><i class="material-icons">track_changes</i> <a href="/setscanfile/unset">Show all Nmap scan</a></li>
+		<li><i class="material-icons">settings_input_antenna</i> <a href="/">Show scan details</a></li>
+		<li><i class="material-icons">add_box</i> <a href="#!" onclick="javascript:newscan();">New Nmap scan</a></li>
+		<li class="wm_line"><div>social</div></li>
+		<li><i class="fab fa-github" style="font-size:20px;"></i> <a href="">GitHub Project</a></li>
+		<li><i class="fas fa-star"></i> <a href="#!" id="githubstar">1</a></li>
+		<li><i class="fas fa-code-branch"></i> <a href="#!" id="githubfork">1</a></li>
+		<li id="activescan_line" style="display:none;" class="wm_line"><div>scan</div></li>
+		<section id="activescan_info" style="display:none;">
+			<li><i class="fas fa-info-circle"></i> <a href="#!" id="activescan_details">&nbsp;</a></li>
+		</section>
+		<li id="activescan_progress" style="display:none;"><div class="progress"><div class="indeterminate"></div></div></li>
+		{% if address %}
+		{% else %}
+			<li class="wm_line"><div>more</div></li>
+			{% for i,v in tr.items %}
+				{% if v.filename %}
+					<li><i class="material-icons">keyboard_arrow_right</i> <a href="{{ v.href }}">{{ v.filename|safe }}</a></li>
+				{% else %}
+					<li><i class="material-icons">keyboard_arrow_right</i> <a href="/report/{{ i }}">{{ i }}</a></li>
+				{% endif %}
+			{% endfor %}
+		{% endif %}
+	</ul>
 </div>
 
 <ul id="slide-out" class="sidenav">
