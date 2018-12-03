@@ -45,12 +45,11 @@
 				<th class="hide-on-small-only">Timestamp</th>
 				<th class="hide-on-small-only">Host Count</th>
 				<th>Stats</th>
-				<th>&nbsp;</th>
 			</tr></thead>
 			<tbody>
 				{% for i,v in tr.items %}
 					<tr>
-						<td><b><a href="{{ v.href }}">{{ v.filename|safe }}</a></b></td>
+						<td><b><a class="blue-text" href="{{ v.href }}">{{ v.filename|safe }}</a></b></td>
 						<td class="hide-on-small-only"><code>{{ v.startstr }}</code></td>
 						<td class="hide-on-small-only">{{ v.hostnum }}</td>
 						<td>
@@ -58,15 +57,14 @@
 							<i class="fas fa-door-closed red-text"></i><span class="red-text">{{ v.portstats.pc }}</span>
 							<i class="fas fa-filter grey-text"></i><span class="grey-text">{{ v.portstats.pf }}</span>
 						</td>
-						<td><a href="{{ v.href }}" class="wbtn-small waves-effect waves-light blue">view</a></td>
 					</tr>
 				{% endfor %}
 			</tbody>
 		</table>
 		</div>
-		<div class="card-action">
-			<a href="#!" onclick="javascript:newscan();" class="valign-wrapper"><i class="material-icons">wifi_tethering</i> &nbsp; New Nmap Scan</a>
-		</div>
+		<!-- <div class="card-action">
+			<a href="#!" onclick="javascript:newscan();" class="valign-wrapper blue-text"><i class="material-icons">wifi_tethering</i> &nbsp; New Nmap Scan</a>
+		</div> -->
 		</div>
 
 		<div class="card" id="activescancard" style="display:none;">

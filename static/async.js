@@ -1,39 +1,123 @@
 var active_scan_timer;
+var wmover = false;
+var wmopen = false;
 $(document).ready(function() {
 	// doc ready
 
 	active_scan_timer = setInterval(function() { checkActiveScan(); }, 2000);
 	$('select').formSelect();
+
+	$.get('https://api.github.com/repos/Rev3rseSecurity/WebMap').done(function(d) {
+		$('#githubstar').html(d['stargazers_count']+' stars');
+		$('#githubfork').html(d['forks']+' forks');
+	});
+
+	var wminterval = setInterval(function() {
+		if(!wmover) {
+			$('.wm_menu').animate({
+				width:'44px'
+			}, {
+				queue:false,
+				start: function() {
+					$('.wm_menu > ul > li > a').each(function() { $(this).css('display','none'); });
+					$('.wm_menu > ul > section > li > a').each(function() { $(this).css('display','none'); });
+				},
+				done: function() {
+					wmopen = false;
+					$('.wm_menu').scrollTop(0);
+					$('.wm_menu').css('overflow-y','hidden');
+				}
+			});
+		}
+	}, 2000);
+
+	$('.wm_menu').css('height', ($(window).height()-120)+'px');
+
+	$('.wm_menu').click(function() {
+		wmover = true;
+
+		$(this).animate({
+			width:'240px'
+		}, {
+			queue:false,
+			done: function() {
+				$('.wm_menu > ul > li > a').each(function() { $(this).stop().show(); });
+				$('.wm_menu > ul > section > li > a').each(function() { $(this).stop().show(); });
+				wmopen = true;
+				$('.wm_menu').css('overflow-y','scroll');
+			}
+		});
+	});
+
+	$('.wm_menu').mouseover(function() {
+		wmover = true;
+	});
+
+	$('.wm_menu').mouseout(function() {
+		if(wmover) {
+			wmover = false;
+		}
+	});
+
 });
 
 function checkActiveScan() {
 	$.get('/api/v1/nmap/scan/active').done(function(d) {
-		console.log(d);
-		$('#activescan').html('');
+		// console.log(d);
+		$('#activescan_info').html('');
 		var c = 0;
 		for(i in d['scans']) {
 			c = (c + 1);
 			if(d['scans'][i]['status'] == 'active') {
-				$('#activescancard').css('display','block');
-				$('#activescan').append(
-					'<div class="row" style="border-bottom:solid #ccc 0px;padding:6px;">'+
-					'<div class="col s1" style="max-width:50px;"><div class="grey white-text small" style="font-family:monospace;border-radius:4px;padding-left:4px;padding-right:4px;width:20px;text-align:center;">'+c+'</div></div>'+
-					'<div class="col s3"><b>Filename:</b><br>'+i+'</div>'+
-					'<div class="col s4 small">Start at: '+d['scans'][i]['startstr']+'<br>Type: '+d['scans'][i]['type']+', Protocol: '+d['scans'][i]['protocol']+'</div>'+
-					'<div class="col s4"><div class="progress"><div class="indeterminate"></div></div></div>'+
-					'</div>'
-				);
-			} else {
-				$('#activescancard').css('display','block');
-				$('#activescan').append(
-					'<div class="row" style="border-bottom:solid #ccc 0px;padding:6px;">'+
-					'<div class="col s3"><b>Filename:</b><br>'+i+'</div>'+
-					'<div class="col s3 small">Start at: '+d['scans'][i]['startstr']+'<br>Type: '+d['scans'][i]['type']+', Protocol: '+d['scans'][i]['protocol']+'</div>'+
-					'<div class="col s4 small">'+d['scans'][i]['summary']+'</div>'+
-					'<div class="col s2"><a href="#!" onclick="javascript:location.reload();" class="wbtn-small blue right">reload</a></div>'+
-					'</div>'
-				);
 
+				$('#activescan_line').css('display','block');
+				$('#activescan_info').css('display','block');
+				$('#activescan_progress').css('display','block');
+				$('#activescan_info').append('<li>'+
+					'<i class="fas fa-info-circle"></i> '+
+					'<a href="#!">'+i+'</a>'+
+				'</li>'+
+				'<li>'+
+					'<i class="material-icons">keyboard_arrow_right</i> '+
+					'<a href="#!">'+d['scans'][i]['startstr']+'</a>'+
+				'</li>'+
+				'<li>'+
+					'<i class="material-icons">keyboard_arrow_right</i> '+
+					'<a href="#!">'+d['scans'][i]['type']+' '+d['scans'][i]['protocol']+'</a>'+
+				'</li>');
+				
+				if(wmover && wmopen) {
+					$('.wm_menu > ul > li > a').each(function() {
+						$(this).stop().show();
+					});
+					$('.wm_menu > ul > section > li > a').each(function() {
+						$(this).stop().show();
+					});
+				}
+			} else {
+
+				$('#activescan_line').css('display','block');
+				$('#activescan_info').css('display','block');
+				$('#activescan_info').append('<li>'+
+					'<i class="fas fa-info-circle"></i> '+
+					'<a href="#!">'+i+'</a>'+
+				'</li>'+
+				'<li>'+
+					'<i class="material-icons">keyboard_arrow_right</i> '+
+					'<a href="#!">'+d['scans'][i]['startstr']+'</a>'+
+				'</li>'+
+				'<li>'+
+					'<i class="material-icons">keyboard_arrow_right</i> '+
+					'<a href="#!">'+d['scans'][i]['type']+' '+d['scans'][i]['protocol']+'</a>'+
+				'</li>');
+				$('#activescan_progress').css('display','none');
+
+				if(wmover && wmopen) {
+					$('.wm_menu > ul > li > a').each(function() { $(this).stop().show(); });
+					$('.wm_menu > ul > section > li > a').each(function() { $(this).stop().show(); });
+				}
+
+				swal("Done!", "Your Nmap scan is done. reload this page...", "success");
 				setTimeout(function() { location.reload(); }, 5000);
 			}
 		}
@@ -62,9 +146,11 @@ function newscan() {
 		'	<input placeholder="Nmap Parameters (ex. -sT -A -T4)" id="params" type="text" class="validate">'+
 		'	<br><br>'+
 		'	<div class="row">'+
-		'		<div class="col s6"><b>Schedule:</b></div><div class="col s6"><b>Frequency:</b></div>'+
-		'		<div class="col s6"><br><br><div class="switch"><label>Off<input id="schedule" name="schedule" type="checkbox"><span class="lever"></span>On</label></div></div>'+
-		'		<div class="col s6 input-field"><select id="frequency" name="frequency">'+
+		'		<div class="col s4 grey-text darken-3"><h6>Schedule:</h6></div>'+
+		'		<div class="col s8" style="padding:10px;"><div class="switch"><label>Off<input id="schedule" name="schedule" type="checkbox"><span class="lever"></span>On</label></div></div>'+
+		'		<div class="col s12" style="border-bottom:solid 1px #ccc;margin-bottom:20px;">&nbsp;</div>'+
+		'		<div class="col s4 grey-text darken-3"><h6>Frequency:</h6></div>'+
+		'		<div class="col s8"><select id="frequency" name="frequency">'+
 		'			<option value="1h">Hourly</option>'+
 		'			<option value="1d">Daily</option>'+
 		'			<option value="1w">Weekly</option>'+
@@ -81,6 +167,7 @@ function newscan() {
 
 function startscan() {
 	$('#modal1').modal('close');
+	swal("Started", "Your new Nmap scan is running...", "success");
 	csrftoken = $('input[name="csrfmiddlewaretoken"]').val();
 	$.post('/api/v1/nmap/scan/new', {
 		'csrfmiddlewaretoken': csrftoken,
@@ -328,3 +415,5 @@ function setLabel(type, label, hashstr, i) {
 		}
 	});
 }
+
+
