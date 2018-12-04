@@ -1,8 +1,28 @@
 var active_scan_timer;
 var wmover = false;
 var wmopen = false;
+var navbarvisible = false;
 $(document).ready(function() {
 	// doc ready
+
+	$(document).scroll(function() {
+		// console.log($(this).scrollTop());
+		if($(this).scrollTop() > 10) {
+			if(!navbarvisible) {
+				navbarvisible = true;
+				$('#topnavbar').css('background-color','rgba(10,10,10,0.9)');
+				$('#topnavbar').css('box-shadow','4px 4px 6px #000');
+			}
+		}
+
+		if($(this).scrollTop() <= 10) {
+			if(navbarvisible) {
+				navbarvisible = false;
+				$('#topnavbar').css('background-color','rgba(10,10,10,0.2)');
+				$('#topnavbar').css('box-shadow','none');
+			}
+		}
+	});
 
 	active_scan_timer = setInterval(function() { checkActiveScan(); }, 2000);
 	$('select').formSelect();
@@ -35,6 +55,7 @@ $(document).ready(function() {
 
 	$('.wm_menu').click(function() {
 		wmover = true;
+		wmopen = true;
 
 		$(this).animate({
 			width:'240px'
@@ -43,7 +64,6 @@ $(document).ready(function() {
 			done: function() {
 				$('.wm_menu > ul > li > a').each(function() { $(this).stop().show(); });
 				$('.wm_menu > ul > section > li > a').each(function() { $(this).stop().show(); });
-				wmopen = true;
 				$('.wm_menu').css('overflow-y','scroll');
 			}
 		});
@@ -51,11 +71,17 @@ $(document).ready(function() {
 
 	$('.wm_menu').mouseover(function() {
 		wmover = true;
+		if(!wmopen) {
+			$(this).stop().animate({width:'60px'},{duration:50});
+		}
 	});
 
 	$('.wm_menu').mouseout(function() {
 		if(wmover) {
 			wmover = false;
+		}
+		if(!wmopen) {
+			$(this).stop().animate({width:'44px'},{duration:200});
 		}
 	});
 
