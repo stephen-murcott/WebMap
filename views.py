@@ -254,6 +254,7 @@ def details(request, address):
 	if scanmd5 in cvehost:
 		if addressmd5 in cvehost[scanmd5]:
 			cvejson = json.loads(cvehost[scanmd5][addressmd5])
+			cveids = {}
 
 			for i in cvejson:
 				if type(i) is list:
@@ -277,13 +278,14 @@ def details(request, address):
 								cveexdbout += '<a href="'+cveexdb['source']+'">'+html.escape(cveexdb['title'])+'</a><br>'
 						cveexdbout += '</div>'
 
-					cveout += '<div style="line-height:28px;padding:10px;border-bottom:solid #ccc 1px;margin-top:10px;">'+\
+					cveout += '<div id="'+html.escape(cveobj['id'])+'" style="line-height:28px;padding:10px;border-bottom:solid #666 1px;margin-top:10px;">'+\
 					'	<span class="label red">'+html.escape(cveobj['id'])+'</span> '+html.escape(cveobj['summary'])+'<br><br>'+\
 					'	<div class="small" style="line-height:20px;"><b>References:</b><br>'+cverefout+'</div>'+\
 					cveexdbout+\
 					'</div>'
+					cveids[cveobj['id']] = cveobj['id']
 				
-
+			r['cveids'] = cveids
 			r['cvelist'] = cveout
 
 	r['js'] = '<script> '+\
@@ -569,12 +571,12 @@ def index(request, filterservice="", filterportid=""):
 						cveout = '<a href="/report/'+address+'" class="grey-text"><i class="fas fa-exclamation-triangle"></i> '+str(cvecount)+' CVE found</a>'
 
 			if (filterservice != "" and striggered is True) or (filterportid != "" and striggered is True) or (filterservice == "" and filterportid == ""):
-				portstateout = '<div style="overflow:none;background-color:#eee;" class="tooltipped" data-position="top" data-tooltip="'+str(po)+' open, '+str(pc)+' closed, '+str(pf)+' filtered">'+\
+				portstateout = '<div style="overflow:none;background-color:#444;" class="tooltipped" data-position="top" data-tooltip="'+str(po)+' open, '+str(pc)+' closed, '+str(pf)+' filtered">'+\
 				'		<div class="perco" data-po="'+str(po)+'" style="padding-left:16px;padding-right:20px;"><b>'+str(po)+'</b></div>'+\
 				' </div>'
 
 				if (filterservice != "" and striggered is True):
-					portstateout = '<div style="overflow:none;background-color:#eee;" class="tooltipped" data-position="top" data-tooltip="'+str(po)+' open, '+str(pc)+' closed, '+str(pf)+' filtered">'+\
+					portstateout = '<div style="overflow:none;background-color:#444;" class="tooltipped" data-position="top" data-tooltip="'+str(po)+' open, '+str(pc)+' closed, '+str(pf)+' filtered">'+\
 					'		<div class="perco" data-po="'+str(po)+'" data-pt="'+str((po + pf + pc))+'" style="padding-left:16px;padding-right:20px;"><b>'+str(po)+'</b></div>'+\
 					'	</div>'
 
@@ -689,11 +691,11 @@ def index(request, filterservice="", filterportid=""):
 		'	$(document).ready(function() {'+\
 		'		var ctx = document.getElementById("chart1").getContext("2d");'+\
 		'		var myChart = new Chart(ctx, {'+\
-		'			type: "doughnut", data: {labels:["Open", "Filtered", "Closed"], datasets: [{ data: ['+str(ports['open'])+','+str(ports['filtered'])+','+str(ports['closed'])+'], backgroundColor:["rgba(0,150,0,0.8)","rgba(255,200,0,0.8)","rgba(255,0,0,0.8)"], borderColor:"#fff" }]}, options: {legend: { position: "right", labels: { fontColor: "#666" }  }}'+\
+		'			type: "doughnut", data: {labels:["Open", "Filtered", "Closed"], datasets: [{ data: ['+str(ports['open'])+','+str(ports['filtered'])+','+str(ports['closed'])+'], backgroundColor:["rgba(0,150,0,0.8)","rgba(255,200,0,0.8)","rgba(255,0,0,0.8)"], borderColor:"#ccc", borderWidth:0 }]}, options: {legend: { position: "right", labels: { fontColor: "#ccc" }  }}'+\
 		'		});'+\
 		'		var ctx = document.getElementById("chart3").getContext("2d");'+\
 		'		var myChart = new Chart(ctx, {'+\
-		'			type: "doughnut", data: {labels:['+allpilabels[0:-2]+'], datasets: [{ data: ['+allpidata[0:-1]+'], borderColor: "#fff",  backgroundColor:["#e6194b", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4", "#46f0f0", "#f032e6", "#bcf60c", "#fabebe", "#008080", "#e6beff", "#9a6324", "#fffac8", "#800000", "#aaffc3", "#808000", "#ffd8b1", "#000075", "#808080", "#ffffff", "#000000"] }]}, options: {legend: { position: "right", labels: { fontColor: "#666" }}}'+\
+		'			type: "doughnut", data: {labels:['+allpilabels[0:-2]+'], datasets: [{ data: ['+allpidata[0:-1]+'], borderColor: "#fff", borderWidth:0,  backgroundColor:["#e6194b", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4", "#46f0f0", "#f032e6", "#bcf60c", "#fabebe", "#008080", "#e6beff", "#9a6324", "#fffac8", "#800000", "#aaffc3", "#808000", "#ffd8b1", "#000075", "#808080", "#ffffff", "#000000"] }]}, options: {legend: { position: "right", labels: { fontColor: "#ccc" }}}'+\
 		'		});'+\
 		'		var ctx = document.getElementById("chart2").getContext("2d");'+\
 		'		var myChart = new Chart(ctx, {'+\

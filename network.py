@@ -31,6 +31,9 @@ def visjs(request):
 
 	scanmd5 = hashlib.md5(str(request.session['scanfile']).encode('utf-8')).hexdigest()
 
+	r['scanfile'] = request.session['scanfile']
+	r['scanmd5'] = scanmd5
+
 	addnodes = ''
 	portnodes = {}
 
@@ -127,7 +130,7 @@ def visjs(request):
 	r['js'] = '<script> $(document).ready(function() { '+\
 	''+\
 	'	var portnodes = '+json.dumps(portnodes)+';'+\
-	"	addNode('scan"+scanmd5+"', '"+request.session['scanfile']+"', '\uf15b', '#333');"+\
+	"	addNode('scan"+scanmd5+"', '"+request.session['scanfile']+"', '\uf15b', '#ccc', '#ccc');"+\
 	addnodes+\
 	''+\
 	'	function showPortNodes(addrmd5) { '+\
