@@ -43,19 +43,21 @@ def nmap_ports_stats(scanfile):
 
 	r = json.dumps(oo['nmaprun'], indent=4)
 	o = json.loads(r)
+	debug = {}
 
 	po,pc,pf = 0,0,0
 
 	if 'host' not in o:
 		return {'po':0,'pc':0,'pf':0}
 
+	iii=0
+	lastaddress = ''
 	for ik in o['host']:
 		if type(ik) is dict:
 			i = ik
 		else:
 			i = o['host']
 
-		ss,pp,ost = {},{},{}
 		lastportid = 0
 
 		if '@addr' in i['address']:
@@ -66,6 +68,10 @@ def nmap_ports_stats(scanfile):
 					address = ai['@addr'] 
 
 		addressmd5 = hashlib.md5(str(address).encode('utf-8')).hexdigest()
+
+		if lastaddress == address:
+			continue
+		lastaddress = address
 
 		striggered = False
 		if 'ports' in i and 'port' in i['ports']:
@@ -80,22 +86,22 @@ def nmap_ports_stats(scanfile):
 				else:
 					lastportid = p['@portid']
 
-				if 'service' in p:
-					ss[p['service']['@name']] = p['service']['@name']
-
-				pp[p['@portid']] = p['@portid']
+				if address not in debug:
+					debug[address] = {'portcount':{'pc':{},'po':{},'pf':{}}}
+				debug[address][p['@portid']] = p['state']
 
 				if p['state']['@state'] == 'closed':
-					#ports['closed'] = (ports['closed'] + 1)
 					pc = (pc + 1)
+					debug[address]['portcount']['pc'][iii] = pc
 				elif p['state']['@state'] == 'open':
-					#ports['open'] = (ports['open'] + 1)
 					po = (po + 1)
+					debug[address]['portcount']['po'][iii] = po
 				elif p['state']['@state'] == 'filtered':
-					#ports['filtered'] = (ports['filtered'] + 1)
 					pf = (pf + 1)
+					debug[address]['portcount']['pf'][iii] = pf
+				iii = (iii + 1)
 
-	return {'po':po,'pc':pc,'pf':pf}
+	return {'po':po,'pc':pc,'pf':pf, 'debug':json.dumps(debug)}
 
 def get_cve(scanmd5):
 	cvehost = {}
