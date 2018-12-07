@@ -326,6 +326,7 @@ def index(request, filterservice="", filterportid=""):
 			if re.search('\.xml$', i) is None:
 				continue
 
+			#portstats = {}
 			xmlfilescount = (xmlfilescount + 1)
 
 			try:
