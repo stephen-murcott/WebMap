@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import string, hashlib
 from random import *
 allchar = string.ascii_letters + string.digits
