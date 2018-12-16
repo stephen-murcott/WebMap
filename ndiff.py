@@ -7,6 +7,9 @@ from nmapreport.functions import *
 def ndiff(request, f1, f2):
 	f = {}
 
+	if token_check(request.GET['token']) is not True:
+		return HttpResponse(json.dumps({'error':'invalid token'}, indent=4), content_type="application/json")
+
 	f['f1'] = get_ports_details(f1)
 	f['f2'] = get_ports_details(f2)
 

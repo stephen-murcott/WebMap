@@ -23,7 +23,7 @@
 			background-image:url({% static "/img/bg.png" %});
 			background-repeat: no-repeat;
 			background-attachment: fixed;
-			background-size:auto 100%;
+			background-size:100% 100%;
 		}
 		.wbtn-small {
 			border-radius:4px;
@@ -202,6 +202,8 @@
 </nav>
 </div>
 
+
+{% if auth %}
 <div class="arrow-up hide-on-med-and-down"></div>
 <div class="wm_menu grey-text hide-on-med-and-down show-on-large">
 	<ul>
@@ -242,7 +244,9 @@
 		<li><i class="fas fa-code-branch"></i> <a href="#!" id="githubfork">1</a></li>
 	</ul>
 </div>
+{% endif %}
 
+{% if scanfile %}
 <ul id="slide-out" class="sidenav">
 	<li><div class="user-view">
 		<div class="background" style="text-align:center;">
@@ -258,6 +262,7 @@
 	<li style="padding-left:30px;margin-top:-20px;"><a class="github-button" href="https://github.com/Rev3rseSecurity/WebMap" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star Rev3rseSecurity/WebMap on GitHub">Star WebMap</a></li>
 	<li style="padding-left:30px;margin-top:-20px;"><a class="github-button" href="https://github.com/Rev3rseSecurity/WebMap/fork" data-icon="octicon-repo-forked" data-size="large" data-show-count="true" aria-label="Fork Rev3rseSecurity/WebMap on GitHub">Fork WebMap</a></li>
 </ul>
+{% endif %}
 
 	{% block content %}
 	{% endblock %}

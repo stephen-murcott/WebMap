@@ -32,11 +32,15 @@
 					</p>
 				</div>
 			</div>
+			
+			{% if stats.popen == 0 and stats.pclosed == 0 and stats.pfiltered == 0 %}
+			{% else %}
 			<div class="card-action">
 				<a href="#!" onclick="javascript:genPDF('{{ scanmd5 }}');"><i class="fas fa-file-pdf"></i> PDF Report</a>
 				<a href="#!" onclick="javascript:checkCVE();"><i class="fas fa-bug"></i> Check for CVE and Exploits</a>
 				<a href="/report/view/network"><i class="fas fa-project-diagram"></i> Network View</a>
 			</div>
+			{% endif %}
 		</div>
 
 		<div class="row" style="{{ pretablestyle }}">
@@ -46,6 +50,8 @@
 			<div class="col s12 m3" style="padding:1px;"><div class="card wmcard" style="text-align:center;padding:6px;"><h4><i class="fas fa-filter orange-text"></i> <span class="orange-text">{{ stats.pfiltered }}</span></h4><span class="small grey-text">FILTERED PORTS</span></div></div>
 		</div>
 
+		{% if stats.popen == 0 and stats.pclosed == 0 and stats.pfiltered == 0 %}
+		{% else %}
 		<div class="card wmcard hide-on-med-and-down" style="{{ pretablestyle }}">
 			<div class="card-content">
 				<div class="row">
@@ -59,8 +65,12 @@
 				</div>
 			</div>
 		</div>
+		{% endif %}
 
-		{{ js|safe }}
+		{% if stats.popen == 0 and stats.pclosed == 0 and stats.pfiltered == 0 %}
+		{% else %}
+			{{ js|safe }}
+		{% endif %}
 
 		{% for i,v in tr.items %}
 			<div class="card wmcard">

@@ -5,6 +5,9 @@ from collections import OrderedDict
 from nmapreport.functions import *
 
 def rmNotes(request, hashstr):
+	if 'auth' not in request.session:
+		return False
+
 	scanfilemd5 = hashlib.md5(str(request.session['scanfile']).encode('utf-8')).hexdigest()
 	if re.match('^[a-f0-9]{32,32}$', hashstr) is not None:
 		os.remove('/opt/notes/'+scanfilemd5+'_'+hashstr+'.notes')
@@ -15,6 +18,9 @@ def rmNotes(request, hashstr):
 	return HttpResponse(json.dumps(res), content_type="application/json")
 
 def saveNotes(request):
+	if 'auth' not in request.session:
+		return False
+
 	if request.method == "POST":
 		scanfilemd5 = hashlib.md5(str(request.session['scanfile']).encode('utf-8')).hexdigest()
 
@@ -29,6 +35,9 @@ def saveNotes(request):
 	return HttpResponse(json.dumps(res), content_type="application/json")
 
 def rmlabel(request, objtype, hashstr):
+	if 'auth' not in request.session:
+		return False
+
 	types = {
 		'host':True,
 		'port':True
@@ -66,6 +75,10 @@ def label(request, objtype, label, hashstr):
 
 def port_details(request, address, portid):
 	r = {}
+
+	if token_check(request.GET['token']) is not True:
+		return HttpResponse(json.dumps({'error':'invalid token'}, indent=4), content_type="application/json")
+
 	oo = xmltodict.parse(open('/opt/xml/'+request.session['scanfile'], 'r').read())
 	r['out'] = json.dumps(oo['nmaprun'], indent=4)
 	o = json.loads(r['out'])
@@ -96,6 +109,9 @@ def port_details(request, address, portid):
 					return HttpResponse(json.dumps(p, indent=4), content_type="application/json")
 
 def genPDF(request):
+	if 'auth' not in request.session:
+		return False
+
 	if 'scanfile' in request.session:
 		pdffile = hashlib.md5(str(request.session['scanfile']).encode('utf-8')).hexdigest()
 		if os.path.exists('/opt/nmapdashboard/nmapreport/static/'+pdffile+'.pdf'):
@@ -108,6 +124,8 @@ def genPDF(request):
 def getCVE(request):
 	res = {}
 
+	if 'auth' not in request.session:
+		return False
 
 	if request.method == "POST":
 		scanfilemd5 = hashlib.md5(str(request.session['scanfile']).encode('utf-8')).hexdigest()
@@ -154,6 +172,9 @@ def getCVE(request):
 		return HttpResponse(json.dumps(res), content_type="application/json")
 
 def apiv1_hostdetails(request, scanfile, faddress=""):
+	if token_check(request.GET['token']) is not True:
+		return HttpResponse(json.dumps({'error':'invalid token'}, indent=4), content_type="application/json")
+
 	oo = xmltodict.parse(open('/opt/xml/'+scanfile, 'r').read())
 	out2 = json.dumps(oo['nmaprun'], indent=4)
 	o = json.loads(out2)
@@ -294,6 +315,8 @@ def apiv1_hostdetails(request, scanfile, faddress=""):
 
 def apiv1_scan(request):
 	r = {}
+	if token_check(request.GET['token']) is not True:
+		return HttpResponse(json.dumps({'error':'invalid token'}, indent=4), content_type="application/json")
 
 	gitcmd = os.popen('cd /opt/nmapdashboard/nmapreport && git rev-parse --abbrev-ref HEAD')
 	r['webmap_version'] = gitcmd.read().strip()

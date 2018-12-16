@@ -7,6 +7,12 @@ from nmapreport.functions import *
 
 def reportPDFView(request):
 	r = { 'out':'' }
+
+	if 'auth' not in request.session:
+		return render(request, 'nmapreport/nmap_auth.html', r)
+	else:
+		r['auth'] = True
+
 	filterscriptid = {
 	}
 

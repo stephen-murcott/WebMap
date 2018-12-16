@@ -4,6 +4,24 @@ import xmltodict, json, html, os, hashlib, re, urllib.parse, base64
 from collections import OrderedDict
 from nmapreport.functions import *
 
+def token_check(token):
+	tokenhash = open('/root/token.sha256').read().strip()
+	if tokenhash == hashlib.sha256(token.encode('utf-8')).hexdigest():
+		return True
+	return False
+
+def login(request):
+	r = {}
+
+	if request.method == "POST":
+		if(re.search('^[a-zA-Z0-9]+$', request.POST['token'])):
+			if token_check(request.POST['token']) is True:
+				request.session['auth'] = True
+				r['auth'] = 'ok'
+				return HttpResponse(json.dumps(r), content_type="application/json")
+
+	return render(request, 'nmapreport/nmap_auth.html', r)
+
 def setscanfile(request, scanfile):
 	xmlfiles = os.listdir('/opt/xml')
 
@@ -24,6 +42,12 @@ def port(request, port):
 
 def details(request, address):
 	r = {}
+
+	if 'auth' not in request.session:
+		return render(request, 'nmapreport/nmap_auth.html', r)
+	else:
+		r['auth'] = True
+
 	oo = xmltodict.parse(open('/opt/xml/'+request.session['scanfile'], 'r').read())
 	r['out2'] = json.dumps(oo['nmaprun'], indent=4)
 	o = json.loads(r['out2'])
@@ -66,6 +90,9 @@ def details(request, address):
 			i = ik
 		else:
 			i = o['host']
+
+		if 'ports' not in i:
+			continue
 
 		if '@addr' in i['address']:
 			saddress = i['address']['@addr']
@@ -307,6 +334,11 @@ def details(request, address):
 def index(request, filterservice="", filterportid=""):
 	r = {}
 
+	if 'auth' not in request.session:
+		return render(request, 'nmapreport/nmap_auth.html', r)
+	else:
+		r['auth'] = True
+
 	gitcmd = os.popen('cd /opt/nmapdashboard/nmapreport && git rev-parse --abbrev-ref HEAD')
 	r['webmapver'] = 'WebMap '+gitcmd.read()+'<br>This project is currently a beta, please <b>DO NOT</b> expose WebMap to internet.<br>This version is <b>NOT</b> production ready.'
 
@@ -431,9 +463,6 @@ def index(request, filterservice="", filterportid=""):
 				else:
 					hostname += '<div class="small grey-text"><b>'+i['hostnames']['hostname']['@type']+':</b> '+i['hostnames']['hostname']['@name']+'</div>'
 
-		if i['status']['@state'] == 'up':
-			hostsup = (hostsup + 1)
-
 		po,pc,pf = 0,0,0
 		ss,pp,ost = {},{},{}
 		lastportid = 0
@@ -446,7 +475,23 @@ def index(request, filterservice="", filterportid=""):
 					address = ai['@addr'] 
 
 		addressmd5 = hashlib.md5(str(address).encode('utf-8')).hexdigest()
+
+		if i['status']['@state'] == 'up':
+			if address not in cpe:
+				hostsup = (hostsup + 1)
+
 		cpe[address] = {}
+
+		r['tr'][address] = {
+			'hostindex': '1',
+			'hostname': hostname,
+			'po': 0,
+			'pc': 0,
+			'pf': 0,
+			'totports': str(0),
+			'addressmd5': addressmd5
+		}
+
 
 		striggered = False
 		e = ''
@@ -633,19 +678,19 @@ def index(request, filterservice="", filterportid=""):
 		scaninfobox3 = '<div id="detailstopports"></div>'
 
 	scantype = ''
-	if '@type' in o['scaninfo']:
+	if 'scaninfo' in o and '@type' in o['scaninfo']:
 		scantype = o['scaninfo']['@type']
 
-	if type(o['scaninfo']) is list:
+	if 'scaninfo' in o and type(o['scaninfo']) is list:
 		for sinfo in o['scaninfo']:
 			scantype += sinfo['@type']+', '
 		scantype = scantype[0:-2]
 
 	protocol = ''
-	if '@protocol' in o['scaninfo']:
+	if 'scaninfo' in o and '@protocol' in o['scaninfo']:
 		protocol = o['scaninfo']['@protocol']
 
-	if type(o['scaninfo']) is list:
+	if 'scaninfo' in o and type(o['scaninfo']) is list:
 		for sinfo in o['scaninfo']:
 			protocol += sinfo['@protocol']+', '
 		protocol = protocol[0:-2]
@@ -758,6 +803,11 @@ def index(request, filterservice="", filterportid=""):
 def scan_diff(request, f1, f2):
 	r = {}
 
+	if 'auth' not in request.session:
+		return render(request, 'nmapreport/nmap_auth.html', r)
+	else:
+		r['auth'] = True
+
 	try:
 		if xmltodict.parse(open('/opt/xml/'+f1, 'r').read()) is not None:
 			r['f1'] = f1
@@ -771,4 +821,10 @@ def scan_diff(request, f1, f2):
 
 def about(request):
 	r = {}
+
+	if 'auth' not in request.session:
+		return render(request, 'nmapreport/nmap_auth.html', r)
+	else:
+		r['auth'] = True
+
 	return render(request, 'nmapreport/nmap_about.html', r)
