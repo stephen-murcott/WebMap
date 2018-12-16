@@ -67,6 +67,9 @@ def details(request, address):
 		else:
 			i = o['host']
 
+		if 'ports' not in i:
+			continue
+
 		if '@addr' in i['address']:
 			saddress = i['address']['@addr']
 		elif type(i['address']) is list:
@@ -431,9 +434,6 @@ def index(request, filterservice="", filterportid=""):
 				else:
 					hostname += '<div class="small grey-text"><b>'+i['hostnames']['hostname']['@type']+':</b> '+i['hostnames']['hostname']['@name']+'</div>'
 
-		if i['status']['@state'] == 'up':
-			hostsup = (hostsup + 1)
-
 		po,pc,pf = 0,0,0
 		ss,pp,ost = {},{},{}
 		lastportid = 0
@@ -446,7 +446,23 @@ def index(request, filterservice="", filterportid=""):
 					address = ai['@addr'] 
 
 		addressmd5 = hashlib.md5(str(address).encode('utf-8')).hexdigest()
+
+		if i['status']['@state'] == 'up':
+			if address not in cpe:
+				hostsup = (hostsup + 1)
+
 		cpe[address] = {}
+
+		r['tr'][address] = {
+			'hostindex': '1',
+			'hostname': hostname,
+			'po': 0,
+			'pc': 0,
+			'pf': 0,
+			'totports': str(0),
+			'addressmd5': addressmd5
+		}
+
 
 		striggered = False
 		e = ''
@@ -633,19 +649,19 @@ def index(request, filterservice="", filterportid=""):
 		scaninfobox3 = '<div id="detailstopports"></div>'
 
 	scantype = ''
-	if '@type' in o['scaninfo']:
+	if 'scaninfo' in o and '@type' in o['scaninfo']:
 		scantype = o['scaninfo']['@type']
 
-	if type(o['scaninfo']) is list:
+	if 'scaninfo' in o and type(o['scaninfo']) is list:
 		for sinfo in o['scaninfo']:
 			scantype += sinfo['@type']+', '
 		scantype = scantype[0:-2]
 
 	protocol = ''
-	if '@protocol' in o['scaninfo']:
+	if 'scaninfo' in o and '@protocol' in o['scaninfo']:
 		protocol = o['scaninfo']['@protocol']
 
-	if type(o['scaninfo']) is list:
+	if 'scaninfo' in o and type(o['scaninfo']) is list:
 		for sinfo in o['scaninfo']:
 			protocol += sinfo['@protocol']+', '
 		protocol = protocol[0:-2]
