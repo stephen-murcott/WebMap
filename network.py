@@ -7,6 +7,12 @@ from nmapreport.functions import *
 def visjs(request):
 	r = {}
 
+	if 'auth' not in request.session:
+		return render(request, 'nmapreport/nmap_auth.html', r)
+	else:
+		r['auth'] = True
+
+
 	if 'scanfile' not in request.session:
 		r['js'] = '''
 			<script>
