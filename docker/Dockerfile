@@ -31,7 +31,7 @@ RUN mkdir /opt/xml && mkdir /opt/notes && \
 RUN pip3 install Django requests xmltodict && \
     cd /opt/ && django-admin startproject nmapdashboard && cd /opt/nmapdashboard && \
     git clone https://github.com/Rev3rseSecurity/WebMap.git nmapreport && \
-    cd nmapreport && git checkout v2.2/master
+    cd nmapreport && git checkout v2.3/master
 
 COPY settings.py /opt/nmapdashboard/nmapdashboard/
 COPY urls.py /opt/nmapdashboard/nmapdashboard/
@@ -40,6 +40,8 @@ COPY tzdata.sh /root/tzdata.sh
 COPY startup.sh /startup.sh
 
 RUN cd /opt/nmapdashboard && python3 manage.py migrate
+RUN apt-get autoremove -y
+RUN ln -s /opt/nmapdashboard/nmapreport/token.py /root/token
 
 EXPOSE 8000
 
