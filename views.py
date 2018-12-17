@@ -4,12 +4,6 @@ import xmltodict, json, html, os, hashlib, re, urllib.parse, base64
 from collections import OrderedDict
 from nmapreport.functions import *
 
-def token_check(token):
-	tokenhash = open('/root/token.sha256').read().strip()
-	if tokenhash == hashlib.sha256(token.encode('utf-8')).hexdigest():
-		return True
-	return False
-
 def login(request):
 	r = {}
 

@@ -76,8 +76,8 @@ def label(request, objtype, label, hashstr):
 def port_details(request, address, portid):
 	r = {}
 
-	if token_check(request.GET['token']) is not True:
-		return HttpResponse(json.dumps({'error':'invalid token'}, indent=4), content_type="application/json")
+	if 'auth' not in request.session:
+		return False
 
 	oo = xmltodict.parse(open('/opt/xml/'+request.session['scanfile'], 'r').read())
 	r['out'] = json.dumps(oo['nmaprun'], indent=4)
