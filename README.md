@@ -12,7 +12,6 @@ A Web Dashbord for Nmap XML Report
 - [Usage](#usage)
 - [Video](#video)
 - [Features](#features)
-- [Changes on v2.1](#changes-on-v21)
 - [PDF Report](#pdf-report)
 - [XML Filenames](#xml-filenames)
 - [CVE and Exploits](#cve-and-exploits)
@@ -41,7 +40,7 @@ Now point your browser to http://localhost:8000
 
 ### Generate new token
 In order to access to the WebMap dashboard, you need a token. You can create a new token with:
-````bash
+```bash
 $ docker exec -ti webmap /root/token
 ```
 
