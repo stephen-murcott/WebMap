@@ -475,7 +475,7 @@ def index(request, filterservice="", filterportid=""):
 				hostsup = (hostsup + 1)
 
 				r['tr'][address] = {
-					'hostindex': '1',
+					'hostindex': '',
 					'hostname': hostname,
 					'po': 0,
 					'pc': 0,
@@ -656,6 +656,13 @@ def index(request, filterservice="", filterportid=""):
 				# this fix single host report
 				if type(ik) is not dict:
 					break;
+			else:
+				if address in r['tr']:
+					del r['tr'][address]
+		else:
+			if address in r['tr']:
+				del r['tr'][address]
+
 
 	totports = (ports['open']+ports['closed']+ports['filtered'])
 	if filterservice == "" and filterportid == "":
