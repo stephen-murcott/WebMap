@@ -474,18 +474,17 @@ def index(request, filterservice="", filterportid=""):
 			if address not in cpe:
 				hostsup = (hostsup + 1)
 
+				r['tr'][address] = {
+					'hostindex': '1',
+					'hostname': hostname,
+					'po': 0,
+					'pc': 0,
+					'pf': 0,
+					'totports': str(0),
+					'addressmd5': addressmd5
+				}
+
 		cpe[address] = {}
-
-		r['tr'][address] = {
-			'hostindex': '1',
-			'hostname': hostname,
-			'po': 0,
-			'pc': 0,
-			'pf': 0,
-			'totports': str(0),
-			'addressmd5': addressmd5
-		}
-
 
 		striggered = False
 		e = ''
