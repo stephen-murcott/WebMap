@@ -285,19 +285,19 @@ def reportPDFView(request):
 		scantitle = m.group(1).replace('.xml','').replace('_',' ')
 
 	scantype = ''
-	if '@type' in o['scaninfo']:
+	if 'scaninfo' in o and '@type' in o['scaninfo']:
 		scantype = o['scaninfo']['@type']
 
-	if type(o['scaninfo']) is list:
+	if 'scaninfo' in o and type(o['scaninfo']) is list:
 		for sinfo in o['scaninfo']:
 			scantype += sinfo['@type']+', '
 		scantype = scantype[0:-2]
 
 	protocol = ''
-	if '@protocol' in o['scaninfo']:
+	if 'scaninfo' in o and '@protocol' in o['scaninfo']:
 		protocol = o['scaninfo']['@protocol']
 
-	if type(o['scaninfo']) is list:
+	if 'scaninfo' in o and type(o['scaninfo']) is list:
 		for sinfo in o['scaninfo']:
 			protocol += sinfo['@protocol']+', '
 		protocol = protocol[0:-2]
