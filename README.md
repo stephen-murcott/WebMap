@@ -3,15 +3,15 @@
 A Web Dashbord for Nmap XML Report 
 </p>
 
-![WebMap](https://i.imgur.com/BOZVc8e.png)
-
-![WebMap](https://i.imgur.com/33kpQ0J.png)
+<img src="https://i.imgur.com/ELZfqd0.png" /><br>
+<img src="https://i.imgur.com/KsBv1S0.png" /><br>
+<img src="https://i.imgur.com/g27mcc3.png" /><br>
+<br>
 
 ## Table Of Contents
 - [Usage](#usage)
 - [Video](#video)
 - [Features](#features)
-- [Changes on v2.1](#changes-on-v21)
 - [PDF Report](#pdf-report)
 - [XML Filenames](#xml-filenames)
 - [CVE and Exploits](#cve-and-exploits)
@@ -37,6 +37,12 @@ $ # now you can run Nmap and save the XML Report on /tmp/webmap
 $ nmap -sT -A -T4 -oX /tmp/webmap/myscan.xml 192.168.1.0/24
 ```
 Now point your browser to http://localhost:8000
+
+### Generate new token
+In order to access to the WebMap dashboard, you need a token. You can create a new token with:
+```bash
+$ docker exec -ti webmap /root/token
+```
 
 ### Quick and Dirty
 ```bash
@@ -65,7 +71,10 @@ but if you need it you can find all building steps inside the [Dockerfile](https
 ## Video
 The HTML template changes often. This video could not be up to date with the latest version.
 
-HackerSploit Video about WebMap:<br>
+Version v2.3:<br>
+coming soon...<br>
+<br>
+HackerSploit Video about WebMap v2.2:<br>
 [![HackerSploit](https://img.youtube.com/vi/SoEIDNnOCGY/0.jpg)](https://www.youtube.com/watch?v=SoEIDNnOCGY)
 <br>
 Official Video of v2.1:<br>
@@ -89,7 +98,7 @@ You love WebMap and you know python? We need your help! This is what we want dep
 - [todo] Improve template: try to define better the html template and charts
 - [todo] Improve API: create a documentation/wiki about it
 - [todo] Wiki: create WebMap User Guide on GitHub
-- [todo] Authentication or something that could blocks access to WebMap if != localhost
+- [working] Authentication or something that could blocks access to WebMap if != localhost
 - [working] Scan diff: show difference between two scheduled nmap scan report
 - [todo] Zaproxy: Perform web scan using the OWASP ZAP API
 
