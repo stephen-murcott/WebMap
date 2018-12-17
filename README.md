@@ -140,7 +140,7 @@ Not all CPE are checked over the circl.lu API, but only when a specific version 
 From `v2.1` WebMap has a RESTful API frontend that makes users able to query their scan files with something like:
 
 ```bash
-curl -s 'http://localhost:8000/api/v1/scan'
+curl -s 'http://localhost:8000/api/v1/scan?token=<token>'
 
     "webmap_version": "v2.1/master",
     "scans": {
@@ -171,7 +171,7 @@ curl -s 'http://localhost:8000/api/v1/scan'
 A user can get information about a single scan by append to the URL the XML filename:
 
 ```bash
-curl -v 'http://localhost:8000/api/v1/scan/hackthebox.xml'
+curl -v 'http://localhost:8000/api/v1/scan/hackthebox.xml?token=<token>'
 
 {
     "file": "hackthebox.xml",
@@ -204,7 +204,7 @@ curl -v 'http://localhost:8000/api/v1/scan/hackthebox.xml'
 and he can get all information about a single host by append the IP address to URL:
 
 ```bash
-curl -v 'http://localhost:8000/api/v1/scan/hackthebox.xml/10.10.10.87'
+curl -v 'http://localhost:8000/api/v1/scan/hackthebox.xml/10.10.10.87?token=<token>'
 
     "file": "hackthebox.xml",
     "hosts": {
