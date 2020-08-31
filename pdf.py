@@ -7,6 +7,12 @@ from nmapreport.functions import *
 
 def reportPDFView(request):
 	r = { 'out':'' }
+
+	if 'auth' not in request.session:
+		return render(request, 'nmapreport/nmap_auth.html', r)
+	else:
+		r['auth'] = True
+
 	filterscriptid = {
 	}
 
@@ -22,6 +28,11 @@ def reportPDFView(request):
 	counters = {'po':0,'pc':0,'pf':0,'hostsup':0,'ostype':{},'pi':{},'ss':{}}
 
 	scanmd5 = hashlib.md5(str(request.session['scanfile']).encode('utf-8')).hexdigest()
+
+	# collect all cve in cvehost dict
+	cvehost = get_cve(scanmd5)
+	r['toc'] = '<h3>Table of contents</h3><div class="container">'
+
 	for ik in o['host']:
 
 		# this fix single host report
@@ -68,6 +79,7 @@ def reportPDFView(request):
 				noteshost[m.group(1)][m.group(2)] = open('/opt/notes/'+nf, 'r').read()
 
 		if i['status']['@state'] == 'up':
+			r['toc'] += '<b>'+saddress+'</b><br>&nbsp; <a href="#addr'+addressmd5+'">Port scan</a><br>'
 			labelout = ''
 			if scanmd5 in labelhost:
 				if addressmd5 in labelhost[scanmd5]:
@@ -76,7 +88,7 @@ def reportPDFView(request):
 					labelout = '<span style="" class="label '+labelcolor+'">'+html.escape(labelhost[scanmd5][addressmd5])+'</span>'
 
 			hostdetails_html += '<div style="page-break-before: always;">'
-			hostdetails_html += '	<h2>'+html.escape(saddress)+' '+labelout+'</h2> '
+			hostdetails_html += '	<h2 id="addr'+addressmd5+'">'+html.escape(saddress)+' '+labelout+'</h2> '
 
 			hostdetails_html += '	<span class="subtitle">Status: '+html.escape(i['status']['@state'])+', '
 			hostdetails_html += 'Reason: '+html.escape(i['status']['@reason'])+', '
@@ -115,16 +127,17 @@ def reportPDFView(request):
 					counters['pf'] = (counters['pf'] + 1)
 					hostcounters['pf'] = (hostcounters['pf'] + 1)
 
-				if '@ostype' in p['service']:
-					if p['service']['@ostype'] in counters['ostype']:
-						counters['ostype'][p['service']['@ostype']] = (counters['ostype'][p['service']['@ostype']] +1)
-					else:
-						counters['ostype'][p['service']['@ostype']] = 1;
+				if 'service' in p:
+					if '@ostype' in p['service']:
+						if p['service']['@ostype'] in counters['ostype']:
+							counters['ostype'][p['service']['@ostype']] = (counters['ostype'][p['service']['@ostype']] +1)
+						else:
+							counters['ostype'][p['service']['@ostype']] = 1;
 
-				if p['service']['@name'] in counters['ss']:
-					counters['ss'][p['service']['@name']] = (counters['ss'][p['service']['@name']] + 1)
-				else:
-					counters['ss'][p['service']['@name']] = 1
+					if p['service']['@name'] in counters['ss']:
+						counters['ss'][p['service']['@name']] = (counters['ss'][p['service']['@name']] + 1)
+					else:
+						counters['ss'][p['service']['@name']] = 1
 
 				if p['@portid'] in counters['pi']:
 					counters['pi'][p['@portid']] = (counters['pi'][p['@portid']] + 1)
@@ -132,25 +145,32 @@ def reportPDFView(request):
 					counters['pi'][p['@portid']] = 1
 
 				hdhtml_product = ''
-				if '@product' in p['service']:
-					hdhtml_product = html.escape(p['service']['@product'])
-				else:
-					hdhtml_product = '<i class="grey-text">No Product</i>'
+				if 'service' in p:
+					if '@product' in p['service']:
+						hdhtml_product = html.escape(p['service']['@product'])
+					else:
+						hdhtml_product = '<i class="grey-text">No Product</i>'
 
 				hdhtml_version = ''
-				if '@version' in p['service']:
-					hdhtml_version = html.escape(p['service']['@version'])
-				else:
-					hdhtml_version = '<i class="grey-text">No Version</i>'
+				if 'service' in p:
+					if '@version' in p['service']:
+						hdhtml_version = html.escape(p['service']['@version'])
+					else:
+						hdhtml_version = '<i class="grey-text">No Version</i>'
 
 				hdhtml_protocolor = 'grey'
 				if p['@protocol'] == 'tcp':
 					hdhtml_protocolor = 'blue'
 				elif p['@protocol'] == 'udp':
 					hdhtml_protocolor = 'red'
+
+				if 'service' in p:
+					servicename = p['service']['@name']
+				else:
+					servicename = ''
 				
 				hostdetails_html_tr += '<tr>'+\
-				'	<td><span class="'+hdhtml_protocolor+'-text">'+p['@protocol']+'</span> / <span class=""><b>'+p['@portid']+'</b></span><br><span class="small">'+p['service']['@name']+'</span></td>'+\
+				'	<td><span class="'+hdhtml_protocolor+'-text">'+p['@protocol']+'</span> / <span class=""><b>'+p['@portid']+'</b></span><br><span class="small">'+servicename+'</span></td>'+\
 				'	<td>'+hdhtml_stateico+' '+p['state']['@state']+'</td>'+\
 				'	<td>'+hdhtml_product+' / '+hdhtml_version+'</td>'+\
 				'</tr>'
@@ -179,11 +199,48 @@ def reportPDFView(request):
 			if addressmd5 in noteshost[scanmd5]:
 				notesb64 = noteshost[scanmd5][addressmd5]
 				notesout = '<div style="page-break-before: always;">'+\
-				'	<h3>Notes for host '+saddress+'</h3>'+\
+				'	<h3 id="notes'+addressmd5+'">Notes for host '+saddress+'</h3>'+\
 				'	'+base64.b64decode(urllib.parse.unquote(notesb64)).decode('ascii')+\
 				'</div>'
+				r['toc'] += '&nbsp; &nbsp; &nbsp; &nbsp; <a href="#notes'+addressmd5+'">Notes</a><br>'
 
 
+		cveout,cveout_html = '',''
+		if scanmd5 in cvehost:
+			if addressmd5 in cvehost[scanmd5]:
+				#for cveport in cvehost[scanmd5][addressmd5]:
+				cvejson = json.loads(cvehost[scanmd5][addressmd5])
+				for ic in cvejson:
+					if type(ic) is list:
+						listcve = ic
+					elif type(ic) is dict:
+						listcve = [ic]
+
+					for cveobj in listcve:	
+						cverefout = ''
+						for cveref in cveobj['references']:
+							cverefout += '<a href="'+cveref+'">'+cveref+'</a><br>'
+
+						cveexdbout = ''
+						if 'exploit-db' in cveobj:
+							cveexdbout = '<br><div class="small" style="line-height:20px;"><b>Exploit DB:</b><br>'
+							for cveexdb in cveobj['exploit-db']:
+								if 'title' in cveexdb:
+									cveexdbout += '<a href="'+cveexdb['source']+'">'+html.escape(cveexdb['title'])+'</a><br>'
+							cveexdbout += '</div>'
+
+						cveout += '<div style="line-height:28px;padding:10px;margin-top:10px;border-bottom:solid #ccc 1px;">'+\
+						'	<span class="label red">'+html.escape(cveobj['id'])+'</span> '+html.escape(cveobj['summary'])+'<br><br>'+\
+						'	<div class="small" style="line-height:20px;"><b>References:</b><br>'+cverefout+'</div>'+\
+						cveexdbout+\
+						'</div>'
+
+				r['toc'] += '&nbsp; &nbsp; &nbsp; &nbsp; <a href="#cvelist'+addressmd5+'">CVE List</a><br>'
+
+				cveout_html = '<div style="page-break-before: always;">'+\
+				'	<h3 id="cvelist'+addressmd5+'">CVE List for '+saddress+':</h3>'+\
+				cveout+\
+				'</div>'
 
 		if i['status']['@state'] == 'up':
 			hostdetails_html += '<div class="row margintb">'+\
@@ -195,8 +252,9 @@ def reportPDFView(request):
 			'	<table><thead><tr><th>Protocol / Port</th><th>Port State</th><th>Product / Version</th></tr></thead><tbody>'+\
 			hostdetails_html_tr+\
 			'</tbody></table></div>'+\
-			'<div class="">'+portdetails_html_tr+'</div>'+\
-			notesout
+			'<div style="page-break-before: always;"><h3>NSE Scripts for '+saddress+':</h3>'+portdetails_html_tr+'</div>'+\
+			notesout+\
+			cveout_html
 
 		if portsfound is True:
 			# r['out'] += '1,'
@@ -221,12 +279,34 @@ def reportPDFView(request):
 		html_services += '<b>'+str(ii)+'</b> <span class="grey-text">('+str(counters['ss'][ii])+')</span>, '
 		javascript_services += '["'+str(ii)+'", '+str(counters['ss'][ii])+'],'
 
+	scantitle = request.session['scanfile'].replace('.xml','').replace('_',' ')
+	if re.search('^webmapsched\_[0-9\.]+', request.session['scanfile']):
+		m = re.search('^webmapsched\_[0-9\.]+\_(.+)', request.session['scanfile'])
+		scantitle = m.group(1).replace('.xml','').replace('_',' ')
+
+	scantype = ''
+	if 'scaninfo' in o and '@type' in o['scaninfo']:
+		scantype = o['scaninfo']['@type']
+
+	if 'scaninfo' in o and type(o['scaninfo']) is list:
+		for sinfo in o['scaninfo']:
+			scantype += sinfo['@type']+', '
+		scantype = scantype[0:-2]
+
+	protocol = ''
+	if 'scaninfo' in o and '@protocol' in o['scaninfo']:
+		protocol = o['scaninfo']['@protocol']
+
+	if 'scaninfo' in o and type(o['scaninfo']) is list:
+		for sinfo in o['scaninfo']:
+			protocol += sinfo['@protocol']+', '
+		protocol = protocol[0:-2]
 
 	r['html'] += '<script type="text/javascript" src="https://www.google.com/jsapi?autoload={%27modules%27:[{%27name%27:%27visualization%27,%27version%27:%271.1%27,%27packages%27:[%27corechart%27,%27sankey%27,%27annotationchart%27]}]}"></script>'+\
 	'<div class="container"><div style="text-align:center;width:100%;">'+\
 	'	<img src="/static/logoblack.png" style="height:60px;" />'+\
 	'	<h1 style="margin-top:300px;">Port Scan Report</h1>'+\
-	'	<span class="subtitle">'+html.escape(request.session['scanfile'].replace('.xml','').replace('_',' '))+'</span><br>'+\
+	'	<span class="subtitle">'+html.escape(scantitle)+'</span><br>'+\
 	'	<div style="margin-top:200px;font-size:18px;padding:20px;"><table class="striped">'+\
 	'	<thead>'+\
 	'		<tr><th style="min-width:200px;">&nbsp;</th><th></th></tr>'+\
@@ -234,11 +314,14 @@ def reportPDFView(request):
 	'	<tbody>'+\
 	'		<tr><td><b>Arguments:</b></td><td>'+html.escape(o['@args'])+'</td></tr>'+\
 	'		<tr><td><b>Scan started at:</b></td><td>'+html.escape(o['@startstr'])+'</td></tr>'+\
-	'		<tr><td><b>Scan type:</b></td><td>'+html.escape(o['scaninfo']['@type'])+'</td></tr>'+\
+	'		<tr><td><b>Scan type:</b></td><td>'+html.escape(scantype)+'</td></tr>'+\
 	'		<tr><td><b>Nmap version:</b></td><td>'+html.escape(o['@version'])+'</td></tr>'+\
 	'	</tbody></table></div>'+\
 	'	<div style="color:#999;margin-top:100px;font-size:18px;"><i>The information contained in these documents is confidential, privileged and only for the information of the intended recipient and may not be used, published or redistributed.</i></div>'+\
 	'</div></div><br>'+\
+	'<!-- <div style="page-break-before: always;">'+\
+	r['toc']+\
+	'</div> --> '+\
 	'<div style="page-break-before: always;">'+\
 	'	<h2>Ports and Services</h2><div class="subtitle">Ports status and services type</div>'+\
 	'	<div class="row" style="margin-top:30px;border-bottom:solid #ccc 1px;padding:10px;">'+\
@@ -334,7 +417,7 @@ def reportPDFView(request):
 	r['html'] += ''+\
 	'<div style="page-break-before: always;">'+\
 	'	<div>'+\
-	'		<div style="text-align:center;padding-top:600px;"><b>Generated with</b><br>'+\
+	'		<div style="text-align:center;padding-top:600px;"><b>Generated by</b><br>'+\
 	'			<img src="/static/logoblack.png" style="height:60px;" /><br>'+\
 	'			<a href="https://github.com/Rev3rseSecurity/WebMap">https://github.com/Rev3rseSecurity/WebMap</a>'+\
 	'		</div>'+\
